@@ -16,15 +16,15 @@ sensor:
 ### The Most Importent Parameters Card
 
 ```yaml
-  type: entities
-  title: OTE Energy CZK
-  entities:
-    - entity: sensor.ote_energy_czk_actual_price
-      name: Actual Price
-    - entity: sensor.ote_energy_czk_highest_price
-      name: Highest Price
-    - entity: sensor.ote_energy_czk_lowest_price
-      name: Lowest Price
+type: entities
+title: OTE Energy CZK
+entities:
+  - entity: sensor.ote_energy_czk_actual_price
+    name: Actual Price
+  - entity: sensor.ote_energy_czk_highest_price
+    name: Highest Price
+  - entity: sensor.ote_energy_czk_lowest_price
+    name: Lowest Price
 ```
 
 ### Entity Card
