@@ -13,7 +13,21 @@ Once you've installed the custom integration, add the following to your `configu
 sensor:
   platform: ote_energy_parser_czk
 ```
-### Entity card
+### The Most Importent Parameters Card
+
+```yaml
+  type: entities
+  title: OTE Energy CZK
+  entities:
+    - entity: sensor.ote_energy_czk_actual_price
+      name: Actual Price
+    - entity: sensor.ote_energy_czk_highest_price
+      name: Highest Price
+    - entity: sensor.ote_energy_czk_lowest_price
+      name: Lowest Price
+```
+
+### Entity Card
 
 ```yaml
 type: entities
@@ -67,5 +81,4 @@ entities:
     name: 22:00 - 22:59
   - entity: sensor.ote_energy_czk_attribut_23
     name: 23:00 - 23:59
-
 ```
