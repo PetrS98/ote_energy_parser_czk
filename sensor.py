@@ -94,7 +94,7 @@ def GetActualEnergyPrice():
 
 def RecalculateOTEData(CourseCode, Unit):
     ReqCourse = []
-    RecalculateData = [float]
+    RecalculateData = []
 
     CZKCourses = GetCZKCourses()
     OTEDayDataEUR = GetDataFromOTE()
@@ -106,16 +106,13 @@ def RecalculateOTEData(CourseCode, Unit):
 
     for HourData in OTEDayDataEUR:
         if Unit:
-            RecalculateData.append((HourData * (float(ReqCourse[4]) / float(ReqCourse[2]))) / 1000.0)
+            RecalculateData.append((HourData * (float(ReqCourse[4].replace(",", ".")) / float(ReqCourse[2].replace(",", ".")))) / 1000.0)
             continue
 
-        RecalculateData.append(HourData * (float(ReqCourse[4]) / float(ReqCourse[2])))
+        RecalculateData.append(HourData * (float(ReqCourse[4].replace(",", ".")) / float(ReqCourse[2].replace(",", "."))))
 
     return RecalculateData
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the sensor platform."""
-    add_entities(BuildClasses(), update_before_add=True)
 
 class OTERateSensor_Actual(SensorEntity):
 
@@ -133,7 +130,7 @@ class OTERateSensor_Actual(SensorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "Current OTE CZE by Petr Staněk - Actual Value"
+        return "OTE Energy CZK - Actual"
 
     @property
     def native_value(self):
@@ -341,3 +338,6 @@ class OTERateSensor_LowestPrice(SensorEntity):
             self.avail = False
             return 0.0     
 
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the sensor platform."""
+    add_entities(BuildClasses(), update_before_add=True)
