@@ -22,12 +22,6 @@ class MeassureUnit(Enum):
     kWh = True
     MWh = False
 
-OTEDayData = []
-
-OTEHighestPrice = float
-OTELowestPrice = float
-OTEActualPrice = float
-
 """ Constants """
 NATIVE_UNIT_OF_MEASUREMENT = "Kč/kWh"
 DEVICE_CLASS = "monetary"
@@ -41,18 +35,18 @@ _LOGGER = logging.getLogger(__name__)
 def BuildClasses():
     Classes = []
 
-    for x in range(len(OTEDayData)):
+    for x in range(24):
         Classes.append(OTERateSensor_Attribut())
 
         Classes[x].AttIndex = x
         Classes[x].NativeUnits = NATIVE_UNIT_OF_MEASUREMENT
         Classes[x].DeviceClass = DEVICE_CLASS
-        Classes[x].CoastData = OTEDayData[x]
+        #Classes[x].CoastData = OTEDayData[x]
         Classes[x].DecPlace = DECIMAL_PLACE_AMOUNTH
 
     Classes.append(OTERateSensor_HighestPrice())
     Classes.append(OTERateSensor_LowestPrice())
-    Classes.append(OTERateSensor_Actual(OTEDayData, OTEActualPrice))
+    Classes.append(OTERateSensor_Actual())
     return Classes
 
 def GetDataFromOTE():
@@ -87,10 +81,10 @@ def GetCZKCourses():
 
     return data
 
-def GetActualEnergyPrice():
+def GetActualEnergyPrice(OTEData):
     DateTime = datetime.datetime.now()
 
-    return OTEDayData[DateTime.hour]
+    return OTEData[DateTime.hour]
 
 def RecalculateOTEData(CourseCode, Unit):
     ReqCourse = []
@@ -159,7 +153,7 @@ class OTERateSensor_Actual(SensorEntity):
         """
         try:
             self.OTEData = RecalculateOTEData(COURSE_CODE, MEASSURE_UNIT)
-            self._value = GetActualEnergyPrice()
+            self._value = GetActualEnergyPrice(self.OTEData)
             self.OTEActual = self._value
             self._available = True
         except:
@@ -259,15 +253,16 @@ class OTERateSensor_HighestPrice(SensorEntity):
         self.val = round(self.GetHighestPrice(), DECIMAL_PLACE_AMOUNTH) 
 
     def GetHighestPrice(self):
+        OTEData = RecalculateOTEData(COURSE_CODE, MEASSURE_UNIT)
         
-        if len(OTEDayData) < 1:
+        if len(OTEData) < 1:
             self.avail = False
             return 0.0
             
-        itemMemory = OTEDayData[0]
+        itemMemory = self.OTEData[0]
 
         try:
-            for item in OTEDayData:
+            for item in OTEData:
                 if item > itemMemory:
                     itemMemory = item
 
@@ -320,15 +315,16 @@ class OTERateSensor_LowestPrice(SensorEntity):
         self.val = round(self.GetHighestPrice(), DECIMAL_PLACE_AMOUNTH) 
 
     def GetHighestPrice(self):
+        OTEData = RecalculateOTEData(COURSE_CODE, MEASSURE_UNIT)
         
-        if len(OTEDayData) < 1:
+        if len(OTEData) < 1:
             self.avail = False
             return 0.0
             
-        itemMemory = OTEDayData[0]
+        itemMemory = OTEData[0]
 
         try:
-            for item in OTEDayData:
+            for item in OTEData:
                 if item > itemMemory:
                     itemMemory = item
 
