@@ -26,7 +26,6 @@ class MeassureUnit(Enum):
 NATIVE_UNIT_OF_MEASUREMENT = "Kč/kWh"
 DEVICE_CLASS = "monetary"
 COURSE_CODE = "EUR"
-NAME = "Current OTE CZE PS"
 DECIMAL_PLACE_AMOUNTH = 6
 MEASSURE_UNIT = MeassureUnit.kWh
 
@@ -36,13 +35,7 @@ def BuildClasses():
     Classes = []
 
     for x in range(24):
-        Classes.append(OTERateSensor_Attribut())
-
-        Classes[x].AttIndex = x
-        Classes[x].NativeUnits = NATIVE_UNIT_OF_MEASUREMENT
-        Classes[x].DeviceClass = DEVICE_CLASS
-        #Classes[x].CoastData = OTEDayData[x]
-        Classes[x].DecPlace = DECIMAL_PLACE_AMOUNTH
+        Classes.append(OTERateSensor_Attribut(x))
 
     Classes.append(OTERateSensor_HighestPrice())
     Classes.append(OTERateSensor_LowestPrice())
@@ -107,7 +100,6 @@ def RecalculateOTEData(CourseCode, Unit):
 
     return RecalculateData
 
-
 class OTERateSensor_Actual(SensorEntity):
 
     """Representation of a Sensor."""
@@ -118,6 +110,11 @@ class OTERateSensor_Actual(SensorEntity):
         self._value = None
         self._attr = None
         self._available = None
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        return "OTE Energy CZK - Actual Price - MAIN"
 
     @property
     def name(self):
@@ -159,53 +156,58 @@ class OTERateSensor_Actual(SensorEntity):
 
 class OTERateSensor_Attribut(SensorEntity):
 
-            _value = None
+    """Representation of a Sensor.""" 
 
-            AttIndex = 0  
-            DecPlace = 0
-            NativeUnits = "" 
-            DeviceClass = ""
-            CoastData = 0.0
+    def __init__(self, AttributIndex):
+        """Initialize the sensor."""
 
-            def __init__(self):
-                """Initialize the sensor."""
+        self._value = None
+        self._available = None
+        self.AttIndex = AttributIndex
 
-                self._value = None
+    @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        return "OTE Energy CZK - Attributs - "+ str(self.AttIndex)
 
-            @property
-            def name(self):
-                """Return the name of the sensor."""
-                return "OTE Energy CZK - Attribut " + str(self.AttIndex)
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return "OTE Energy CZK - Attribut " + str(self.AttIndex)
 
-            @property
-            def native_value(self):
-                """Return the native value of the sensor."""
-                return self._value
+    @property
+    def native_value(self):
+        """Return the native value of the sensor."""
+        return self._value
 
-            @property
-            def native_unit_of_measurement(self):
-                """Return the native unit of measurement."""
-                return self.NativeUnits
+    @property
+    def native_unit_of_measurement(self):
+        """Return the native unit of measurement."""
+        return NATIVE_UNIT_OF_MEASUREMENT
 
-            @property
-            def device_class(self):
-                """Return the device class of the sensor."""
-                return self.DeviceClass
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS
 
-            @property
-            def available(self):
-                """Return True if entity is available."""
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        
+        return self._available
 
-                if len(self.CoastData) >= self.AttIndex + 1:
-                    return True
-                
-                return False
+    def update(self):
+        """Fetch new state data for the sensor.
+        This is the only method that should fetch new data for Home Assistant.
+        """
+        OTEData = RecalculateOTEData(COURSE_CODE, MEASSURE_UNIT)
 
-            def update(self):
-                """Fetch new state data for the sensor.
-                This is the only method that should fetch new data for Home Assistant.
-                """
-                self._value = round(self.CoastData, self.DecPlace)
+        if len(OTEData) >= self.AttIndex + 1:
+            self._available = True
+        else:
+            self._available = False
+
+        self._value = round(OTEData[self.AttIndex], DECIMAL_PLACE_AMOUNTH)
     
 class OTERateSensor_HighestPrice(SensorEntity):
     """Representation of a Sensor."""
@@ -215,6 +217,11 @@ class OTERateSensor_HighestPrice(SensorEntity):
 
         self.val = None
         self.avail = None
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        return "OTE Energy CZK - Highest Price - MAIN"
 
     @property
     def name(self):
@@ -267,6 +274,11 @@ class OTERateSensor_LowestPrice(SensorEntity):
 
         self.val = None
         self.avail = None
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        return "OTE Energy CZK - Lowest Price - MAIN"
 
     @property
     def name(self):
