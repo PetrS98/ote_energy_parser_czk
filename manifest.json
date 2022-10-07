@@ -1,0 +1,10 @@
+{
+  "domain": "ote_energy_parser_czk",
+  "name": "OTE Energy Parser in CZK",
+  "documentation": "",
+  "dependencies": [],
+  "codeowners": [],
+  "requirements": ["requests"],
+  "iot_class": "cloud_polling",
+  "version": "1.0.0"
+}
