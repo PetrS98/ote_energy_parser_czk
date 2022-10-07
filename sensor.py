@@ -112,19 +112,17 @@ class OTERateSensor_Actual(SensorEntity):
 
     """Representation of a Sensor."""
 
-    def __init__(self, OTEDayData, OTEActualPrice):
+    def __init__(self):
         """Initialize the sensor."""
 
         self._value = None
         self._attr = None
         self._available = None
-        self.OTEData = OTEDayData
-        self.OTEActual = OTEActualPrice
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "OTE Energy CZK - Actual"
+        return "OTE Energy CZK - Actual Price"
 
     @property
     def native_value(self):
@@ -153,8 +151,7 @@ class OTERateSensor_Actual(SensorEntity):
         """
         try:
             self.OTEData = RecalculateOTEData(COURSE_CODE, MEASSURE_UNIT)
-            self._value = GetActualEnergyPrice(self.OTEData)
-            self.OTEActual = self._value
+            self._value = round(GetActualEnergyPrice(self.OTEData), DECIMAL_PLACE_AMOUNTH)
             self._available = True
         except:
             _LOGGER.exception("Error occured while retrieving data from ote-cr.cz.")
