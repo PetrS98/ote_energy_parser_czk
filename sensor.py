@@ -258,20 +258,10 @@ class OTERateSensor_HighestPrice(SensorEntity):
         if len(OTEData) < 1:
             self.avail = False
             return 0.0
-            
-        itemMemory = self.OTEData[0]
 
-        try:
-            for item in OTEData:
-                if item > itemMemory:
-                    itemMemory = item
-
-            self.avail = True
-            return itemMemory
-        except:
-            self.avail = False
-            return 0.0     
-
+        self.avail = True
+        return max(OTEData)
+        
 class OTERateSensor_LowestPrice(SensorEntity):
     """Representation of a Sensor."""
 
@@ -312,27 +302,18 @@ class OTERateSensor_LowestPrice(SensorEntity):
 
         This is the only method that should fetch new data for Home Assistant.
         """
-        self.val = round(self.GetHighestPrice(), DECIMAL_PLACE_AMOUNTH) 
+        self.val = round(self.GetLowestPrice(), DECIMAL_PLACE_AMOUNTH) 
 
-    def GetHighestPrice(self):
+    def GetLowestPrice(self):
         OTEData = RecalculateOTEData(COURSE_CODE, MEASSURE_UNIT)
         
         if len(OTEData) < 1:
             self.avail = False
             return 0.0
+
+        self.avail = True
+        return min(OTEData)
             
-        itemMemory = OTEData[0]
-
-        try:
-            for item in OTEData:
-                if item > itemMemory:
-                    itemMemory = item
-
-            self.avail = True
-            return itemMemory
-        except:
-            self.avail = False
-            return 0.0     
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
