@@ -11,7 +11,10 @@ Once you've installed the custom integration, add the following to your `configu
 
 ```yaml
 sensor:
-  platform: ote_energy_parser_czk
+  - platform: ote_energy_parser_czk
+
+binary_sensor:
+  - platform: ote_energy_parser_czk
 ```
 ### The Most Importent Parameters Card
 
@@ -25,6 +28,19 @@ entities:
     name: Highest Price
   - entity: sensor.ote_energy_czk_lowest_price
     name: Lowest Price
+```
+
+### Lowest Highest Price Active Cards
+
+```yaml
+type: entities
+title: OTE Energy CZK
+entities:
+  - entity: binary_sensor.ote_energy_czk_highest_price_active
+    name: Highest Price Active
+  - entity: binary_sensor.ote_energy_czk_lowest_price_active
+    name: Lowest Price Active
+
 ```
 
 ### Entity Card

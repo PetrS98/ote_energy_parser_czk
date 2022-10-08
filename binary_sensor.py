@@ -110,12 +110,12 @@ class OTERateSensor_HighestPrice_Active(BinarySensorEntity):
         try:
             OTEData = RecalculateOTEData(COURSE_CODE, MEASSURE_UNIT)
             MaxPrice = max(OTEData)
-            ActualPrice = GetActualEnergyPrice()
+            ActualPrice = GetActualEnergyPrice(OTEData)
 
             if MaxPrice == ActualPrice:
                 self._active = True
             else:
-                self._active = False
+                self._active = False  
             self._available = True
         except:
             _LOGGER.exception("Error occured while retrieving data from ote-cr.cz or recalculating data.")
@@ -154,7 +154,7 @@ class OTERateSensor_LowestPrice_Active(BinarySensorEntity):
         try:
             OTEData = RecalculateOTEData(COURSE_CODE, MEASSURE_UNIT)
             MaxPrice = min(OTEData)
-            ActualPrice = GetActualEnergyPrice()
+            ActualPrice = GetActualEnergyPrice(OTEData)
 
             if MaxPrice == ActualPrice:
                 self._active = True
