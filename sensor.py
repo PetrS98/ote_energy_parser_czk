@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
 )
 
 """ External Imports """
-import OteLib
+import lib.OteLib as OteLib
 import logging
 from enum import Enum
 
