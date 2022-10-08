@@ -52,6 +52,8 @@ def BuildClasses(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement):
     Classes.append(OTERateSensor_HighestPrice(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement))
     Classes.append(OTERateSensor_LowestPrice(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement))
     Classes.append(OTERateSensor_Actual(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement))
+    Classes.append(OTERateSensor_HighestPriceHour(CourseCode, MeasureUnit))
+    Classes.append(OTERateSensor_LowestPriceHour(CourseCode, MeasureUnit))
     return Classes
 
 def GetDataFromOTE():
@@ -351,7 +353,108 @@ class OTERateSensor_LowestPrice(SensorEntity):
 
         self.avail = True
         return min(OTEData)
-            
+
+class OTERateSensor_HighestPriceHour(SensorEntity):
+    """Representation of a Sensor."""
+
+    def __init__(self, CourseCode, MeasureUnit):
+        """Initialize the sensor."""
+
+        self.val = None
+        self.avail = None
+        self._courseCode = CourseCode
+        self._measureUnit = MeasureUnit
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        return "OTE Energy CZK - Highest Price Hour - MAIN"
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return "OTE Energy CZK - Highest Price Hour"
+
+    @property
+    def native_value(self):
+        """Return the native value of the sensor."""
+        return self.val
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+
+        return self.avail
+
+    def update(self):
+        """Fetch new state data for the sensor.
+
+        This is the only method that should fetch new data for Home Assistant.
+        """
+        try:
+            OTEData = RecalculateOTEData(self._courseCode, self._measureUnit)
+            MaxPrice = max(OTEData)
+            DataIndex = OTEData.index(MaxPrice)
+            self.val = format(f"{DataIndex:02d}") + ":00 - " + format(f"{DataIndex:02d}") + ":59"
+            self.avail = True
+        except:
+            self.avail = False
+
+class OTERateSensor_LowestPriceHour(SensorEntity):
+    """Representation of a Sensor."""
+
+    def __init__(self, CourseCode, MeasureUnit):
+        """Initialize the sensor."""
+
+        self.val = None
+        self.avail = None
+        self._courseCode = CourseCode
+        self._measureUnit = MeasureUnit
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        return "OTE Energy CZK - Lowest Price Hour - MAIN"
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return "OTE Energy CZK - Lowest Price Hour"
+
+    @property
+    def native_value(self):
+        """Return the native value of the sensor."""
+        return self.val
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+
+        return self.avail
+
+    def update(self):
+        """Fetch new state data for the sensor.
+
+        This is the only method that should fetch new data for Home Assistant.
+        """
+        try:
+            OTEData = RecalculateOTEData(self._courseCode, self._measureUnit)
+            MinPrice = min(OTEData)
+            DataIndex = OTEData.index(MinPrice)
+            self.val = format(f"{DataIndex:02d}") + ":00 - " + format(f"{DataIndex:02d}") + ":59"
+            self.avail = True
+        except:
+            self.avail = False   
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""

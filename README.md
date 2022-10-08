@@ -32,8 +32,13 @@ entities:
     name: Actual Price
   - entity: sensor.ote_energy_czk_highest_price
     name: Highest Price
+  - entity: sensor.ote_energy_czk_highest_price_hour
+    name: Highest Price Hour
   - entity: sensor.ote_energy_czk_lowest_price
     name: Lowest Price
+  - entity: sensor.ote_energy_czk_lowest_price_hour
+    name: Lowest Price Hour
+
 ```
 
 ### Lowest Highest Price Active Cards
