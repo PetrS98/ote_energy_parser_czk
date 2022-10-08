@@ -112,7 +112,7 @@ class OTERateSensor_HighestPrice_Active(BinarySensorEntity):
             MaxPrice = max(OTEData)
             ActualPrice = GetActualEnergyPrice(OTEData)
 
-            if MaxPrice == ActualPrice:
+            if abs(MaxPrice - ActualPrice) < 0.000001:
                 self._active = True
             else:
                 self._active = False  
@@ -153,10 +153,10 @@ class OTERateSensor_LowestPrice_Active(BinarySensorEntity):
     def update(self):
         try:
             OTEData = RecalculateOTEData(COURSE_CODE, MEASSURE_UNIT)
-            MaxPrice = min(OTEData)
+            MinPrice = min(OTEData)
             ActualPrice = GetActualEnergyPrice(OTEData)
 
-            if MaxPrice == ActualPrice:
+            if abs(MinPrice - ActualPrice) < 0.000001:
                 self._active = True
             else:
                 self._active = False

@@ -4,6 +4,9 @@ from pickle import FALSE
 import string
 from time import time
 from typing import Any
+import voluptuous as vol
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import (
     DEVICE_CLASS_MONETARY,
@@ -17,28 +20,38 @@ from enum import Enum
 import requests
 import datetime
 
-class MeassureUnit(Enum):
+class MeasureUnit(Enum):
     kWh = True
     MWh = False
 
 """ Constants """
-NATIVE_UNIT_OF_MEASUREMENT = "Kč/kWh"
 DEVICE_CLASS = "monetary"
-COURSE_CODE = "EUR"
-DECIMAL_PLACE_AMOUNTH = 6
-MEASSURE_UNIT = MeassureUnit.kWh
+
+CONF_COURSE_CODE = "course_code"
+CONF_MEASURE_UNIT = "measure_unit"
+CONF_DECIMAL_PLACES = "decimal_places"
+CONF_UNIT_OF_MEASUREMENT = "unit_of_measurement"
 
 _LOGGER = logging.getLogger(__name__)
 
-def BuildClasses():
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_COURSE_CODE): cv.string,
+        vol.Required(CONF_MEASURE_UNIT): cv.positive_int,
+        vol.Required(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Required(CONF_DECIMAL_PLACES): cv.positive_int
+    }
+)
+
+def BuildClasses(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement):
     Classes = []
 
     for x in range(24):
-        Classes.append(OTERateSensor_Attribut(x))
+        Classes.append(OTERateSensor_Attribut(x, CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement))
 
-    Classes.append(OTERateSensor_HighestPrice())
-    Classes.append(OTERateSensor_LowestPrice())
-    Classes.append(OTERateSensor_Actual())
+    Classes.append(OTERateSensor_HighestPrice(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement))
+    Classes.append(OTERateSensor_LowestPrice(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement))
+    Classes.append(OTERateSensor_Actual(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement))
     return Classes
 
 def GetDataFromOTE():
@@ -91,11 +104,12 @@ def RecalculateOTEData(CourseCode, Unit):
             break
 
     for HourData in OTEDayDataEUR:
-        if Unit:
+        if Unit == 0:
+            RecalculateData.append(HourData * (float(ReqCourse[4].replace(",", ".")) / float(ReqCourse[2].replace(",", "."))))
+        elif Unit == 1:
             RecalculateData.append((HourData * (float(ReqCourse[4].replace(",", ".")) / float(ReqCourse[2].replace(",", ".")))) / 1000.0)
-            continue
-
-        RecalculateData.append(HourData * (float(ReqCourse[4].replace(",", ".")) / float(ReqCourse[2].replace(",", "."))))
+        else:
+            RecalculateData.append((HourData * (float(ReqCourse[4].replace(",", ".")) / float(ReqCourse[2].replace(",", ".")))) / 1000000.0)
 
     return RecalculateData
 
@@ -103,12 +117,16 @@ class OTERateSensor_Actual(SensorEntity):
 
     """Representation of a Sensor."""
 
-    def __init__(self):
+    def __init__(self, CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement):
         """Initialize the sensor."""
 
         self._value = None
         self._attr = None
         self._available = None
+        self._courseCode = CourseCode
+        self._measureUnit = MeasureUnit
+        self._decimalPlaces = DecimalPlaces
+        self._unitOfMeasurement = UnitOfMeasurement
 
     @property
     def unique_id(self):
@@ -128,7 +146,7 @@ class OTERateSensor_Actual(SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the native unit of measurement."""
-        return NATIVE_UNIT_OF_MEASUREMENT
+        return self._unitOfMeasurement
 
     @property
     def device_class(self):
@@ -146,8 +164,8 @@ class OTERateSensor_Actual(SensorEntity):
         This is the only method that should fetch new data for Home Assistant.
         """
         try:
-            self.OTEData = RecalculateOTEData(COURSE_CODE, MEASSURE_UNIT)
-            self._value = round(GetActualEnergyPrice(self.OTEData), DECIMAL_PLACE_AMOUNTH)
+            self.OTEData = RecalculateOTEData(self._courseCode, self._measureUnit)
+            self._value = round(GetActualEnergyPrice(self.OTEData), self._decimalPlaces)
             self._available = True
         except:
             _LOGGER.exception("Error occured while retrieving data from ote-cr.cz.")
@@ -157,12 +175,16 @@ class OTERateSensor_Attribut(SensorEntity):
 
     """Representation of a Sensor.""" 
 
-    def __init__(self, AttributIndex):
+    def __init__(self, AttributIndex, CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement):
         """Initialize the sensor."""
 
         self._value = None
         self._available = None
         self.AttIndex = AttributIndex
+        self._courseCode = CourseCode
+        self._measureUnit = MeasureUnit
+        self._decimalPlaces = DecimalPlaces  
+        self._unitOfMeasurement = UnitOfMeasurement
 
     @property
     def unique_id(self):
@@ -182,7 +204,7 @@ class OTERateSensor_Attribut(SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the native unit of measurement."""
-        return NATIVE_UNIT_OF_MEASUREMENT
+        return self._unitOfMeasurement
 
     @property
     def device_class(self):
@@ -199,23 +221,27 @@ class OTERateSensor_Attribut(SensorEntity):
         """Fetch new state data for the sensor.
         This is the only method that should fetch new data for Home Assistant.
         """
-        OTEData = RecalculateOTEData(COURSE_CODE, MEASSURE_UNIT)
+        OTEData = RecalculateOTEData(self._courseCode, self._measureUnit)
 
         if len(OTEData) >= self.AttIndex + 1:
             self._available = True
         else:
             self._available = False
 
-        self._value = round(OTEData[self.AttIndex], DECIMAL_PLACE_AMOUNTH)
+        self._value = round(OTEData[self.AttIndex], self._decimalPlaces)
     
 class OTERateSensor_HighestPrice(SensorEntity):
     """Representation of a Sensor."""
 
-    def __init__(self):
+    def __init__(self, CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement):
         """Initialize the sensor."""
 
         self.val = None
         self.avail = None
+        self._courseCode = CourseCode
+        self._measureUnit = MeasureUnit
+        self._decimalPlaces = DecimalPlaces
+        self._unitOfMeasurement = UnitOfMeasurement
 
     @property
     def unique_id(self):
@@ -235,7 +261,7 @@ class OTERateSensor_HighestPrice(SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the native unit of measurement."""
-        return NATIVE_UNIT_OF_MEASUREMENT
+        return self._unitOfMeasurement
 
     @property
     def device_class(self):
@@ -253,10 +279,10 @@ class OTERateSensor_HighestPrice(SensorEntity):
 
         This is the only method that should fetch new data for Home Assistant.
         """
-        self.val = round(self.GetHighestPrice(), DECIMAL_PLACE_AMOUNTH) 
+        self.val = round(self.GetHighestPrice(), self._decimalPlaces) 
 
     def GetHighestPrice(self):
-        OTEData = RecalculateOTEData(COURSE_CODE, MEASSURE_UNIT)
+        OTEData = RecalculateOTEData(self._courseCode, self._measureUnit)
         
         if len(OTEData) < 1:
             self.avail = False
@@ -268,11 +294,15 @@ class OTERateSensor_HighestPrice(SensorEntity):
 class OTERateSensor_LowestPrice(SensorEntity):
     """Representation of a Sensor."""
 
-    def __init__(self):
+    def __init__(self, CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement):
         """Initialize the sensor."""
 
         self.val = None
         self.avail = None
+        self._courseCode = CourseCode
+        self._measureUnit = MeasureUnit
+        self._decimalPlaces = DecimalPlaces
+        self._unitOfMeasurement = UnitOfMeasurement
 
     @property
     def unique_id(self):
@@ -292,7 +322,7 @@ class OTERateSensor_LowestPrice(SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the native unit of measurement."""
-        return NATIVE_UNIT_OF_MEASUREMENT
+        return self._unitOfMeasurement
 
     @property
     def device_class(self):
@@ -310,10 +340,10 @@ class OTERateSensor_LowestPrice(SensorEntity):
 
         This is the only method that should fetch new data for Home Assistant.
         """
-        self.val = round(self.GetLowestPrice(), DECIMAL_PLACE_AMOUNTH) 
+        self.val = round(self.GetLowestPrice(), self._decimalPlaces) 
 
     def GetLowestPrice(self):
-        OTEData = RecalculateOTEData(COURSE_CODE, MEASSURE_UNIT)
+        OTEData = RecalculateOTEData(self._courseCode, self._measureUnit)
         
         if len(OTEData) < 1:
             self.avail = False
@@ -325,4 +355,9 @@ class OTERateSensor_LowestPrice(SensorEntity):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
-    add_entities(BuildClasses(), update_before_add=True)
+    CourseCode = config.get(CONF_COURSE_CODE)
+    MeasureUnit = config.get(CONF_MEASURE_UNIT)
+    UnitOfMeasurement = config.get(CONF_UNIT_OF_MEASUREMENT)
+    DecimalPlaces = config.get(CONF_DECIMAL_PLACES)
+
+    add_entities(BuildClasses(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement), update_before_add=True)

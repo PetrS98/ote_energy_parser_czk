@@ -1,7 +1,7 @@
 # OTE Energy Cost Sensor for Home Assistant
 
-This is an integration providing current price per kilowatt of energy based on the quote
-from ote-cr.cz, attributes as solo sensors, lowest price sensor and highest price sensor.
+This is an integration providing price of energy from ote-cr.cz, attributes as solo sensors, lowest price sensor and highest price sensor.
+And binary status sensors for lowest and highest price active.
 
 ### Installation
 
@@ -12,9 +12,15 @@ Once you've installed the custom integration, add the following to your `configu
 ```yaml
 sensor:
   - platform: ote_energy_parser_czk
+    course_code: EUR                      # Currency code (ISO 4217) to be converted to CZK [string]
+    measure_unit: 0                       # 0 = MWh, 1 = kWh, > 1 = Wh [int]
+    unit_of_measurement: kč/kWh           # Viewed unit [string]
+    decimal_places: 5                     # Decimal places [int]
+    scan_interval: 30                     # Refresh interval [int][sec]
 
 binary_sensor:
   - platform: ote_energy_parser_czk
+    scan_interval: 30
 ```
 ### The Most Importent Parameters Card
 
