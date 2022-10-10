@@ -166,8 +166,6 @@ class OTERateSensor_Actual(SensorEntity):
     @property
     def extra_state_attributes(self):
         if self._addAttributesToActualPrice:
-            #return {"00:00 - 00:59":self._valueList[0],
-            #        "01:00 - 01:59":self._valueList[1]}
             return self._valueDict
 
     @property
