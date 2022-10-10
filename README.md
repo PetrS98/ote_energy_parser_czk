@@ -56,7 +56,7 @@ entities:
 
 ```
 
-### Entity Card
+### Entity Card (Only if _add_attribute_sensors: true_)
 
 ```yaml
 type: entities
