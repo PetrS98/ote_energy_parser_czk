@@ -16,11 +16,11 @@ sensor:
     measure_unit: 0                       # 0 = MWh, 1 = kWh, > 1 = Wh [int]
     unit_of_measurement: kč/kWh           # Viewed unit [string]
     decimal_places: 5                     # Decimal places [int]
-    scan_interval: 30                     # Refresh interval [int][sec]
+    scan_interval: 10                     # Refresh interval [int][sec]
 
 binary_sensor:
   - platform: ote_energy_parser_czk
-    scan_interval: 30
+    scan_interval: 10
 ```
 ### The Most Importent Parameters Card
 
