@@ -16,7 +16,7 @@ MEASSURE_UNIT = MeassureUnit.kWh
 
 _LOGGER = logging.getLogger(__name__)
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([OTERateSensor_HighestPrice_Active(), OTERateSensor_LowestPrice_Active()], update_before_add=True)
 
 def GetDataFromOTE():

@@ -4,6 +4,10 @@ from pickle import FALSE
 import string
 from time import time
 from typing import Any
+from typing_extensions import Required
+from xmlrpc.client import boolean
+
+from numpy import positive
 import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
@@ -20,10 +24,6 @@ from enum import Enum
 import requests
 import datetime
 
-class MeasureUnit(Enum):
-    kWh = True
-    MWh = False
-
 """ Constants """
 DEVICE_CLASS = "monetary"
 
@@ -31,6 +31,8 @@ CONF_COURSE_CODE = "course_code"
 CONF_MEASURE_UNIT = "measure_unit"
 CONF_DECIMAL_PLACES = "decimal_places"
 CONF_UNIT_OF_MEASUREMENT = "unit_of_measurement"
+CONF_ADD_ATTRIBUTE_SENSORS = "add_attribute_sensors"
+CONF_ADD_ATTRIBUTES_TO_ACTUAL_PRICE = "add_attributes_to_actual_price"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,19 +41,23 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_COURSE_CODE): cv.string,
         vol.Required(CONF_MEASURE_UNIT): cv.positive_int,
         vol.Required(CONF_UNIT_OF_MEASUREMENT): cv.string,
-        vol.Required(CONF_DECIMAL_PLACES): cv.positive_int
+        vol.Required(CONF_DECIMAL_PLACES): cv.positive_int,
+        vol.Required(CONF_ADD_ATTRIBUTE_SENSORS): cv.boolean,
+        vol.Required(CONF_ADD_ATTRIBUTES_TO_ACTUAL_PRICE): cv.boolean
     }
 )
 
-def BuildClasses(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement):
+def BuildClasses(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddAttributeSensors, AddAttributesToActualPrice):
     Classes = []
 
-    for x in range(24):
-        Classes.append(OTERateSensor_Attribut(x, CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement))
+    if AddAttributeSensors:
+
+        for x in range(24):
+            Classes.append(OTERateSensor_Attribut(x, CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement))
 
     Classes.append(OTERateSensor_HighestPrice(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement))
     Classes.append(OTERateSensor_LowestPrice(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement))
-    Classes.append(OTERateSensor_Actual(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement))
+    Classes.append(OTERateSensor_Actual(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddAttributesToActualPrice))
     Classes.append(OTERateSensor_HighestPriceHour(CourseCode, MeasureUnit))
     Classes.append(OTERateSensor_LowestPriceHour(CourseCode, MeasureUnit))
     return Classes
@@ -119,7 +125,7 @@ class OTERateSensor_Actual(SensorEntity):
 
     """Representation of a Sensor."""
 
-    def __init__(self, CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement):
+    def __init__(self, CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddAttributesToActualPrice):
         """Initialize the sensor."""
 
         self._value = None
@@ -129,6 +135,8 @@ class OTERateSensor_Actual(SensorEntity):
         self._measureUnit = MeasureUnit
         self._decimalPlaces = DecimalPlaces
         self._unitOfMeasurement = UnitOfMeasurement
+        self._addAttributesToActualPrice = AddAttributesToActualPrice
+        self._valueDict = dict()
 
     @property
     def unique_id(self):
@@ -156,6 +164,13 @@ class OTERateSensor_Actual(SensorEntity):
         return DEVICE_CLASS
 
     @property
+    def extra_state_attributes(self):
+        if self._addAttributesToActualPrice:
+            #return {"00:00 - 00:59":self._valueList[0],
+            #        "01:00 - 01:59":self._valueList[1]}
+            return self._valueDict
+
+    @property
     def available(self):
         """Return True if entity is available."""
         return self._available
@@ -168,6 +183,11 @@ class OTERateSensor_Actual(SensorEntity):
         try:
             self.OTEData = RecalculateOTEData(self._courseCode, self._measureUnit)
             self._value = round(GetActualEnergyPrice(self.OTEData), self._decimalPlaces)
+
+            if self._addAttributesToActualPrice:
+                for x in range(len(self.OTEData)):
+                    self._valueDict[format(f"{x:02d}") + ":00 - " + format(f"{x:02d}") + ":59"] = self.OTEData[x]
+
             self._available = True
         except:
             _LOGGER.exception("Error occured while retrieving data from ote-cr.cz.")
@@ -456,11 +476,13 @@ class OTERateSensor_LowestPriceHour(SensorEntity):
         except:
             self.avail = False   
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
     CourseCode = config.get(CONF_COURSE_CODE)
     MeasureUnit = config.get(CONF_MEASURE_UNIT)
     UnitOfMeasurement = config.get(CONF_UNIT_OF_MEASUREMENT)
     DecimalPlaces = config.get(CONF_DECIMAL_PLACES)
+    AddAttributeSensors = config.get(CONF_ADD_ATTRIBUTE_SENSORS)
+    AddAttributesToActualPrice = config.get(CONF_ADD_ATTRIBUTES_TO_ACTUAL_PRICE)
 
-    add_entities(BuildClasses(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement), update_before_add=True)
+    add_entities(BuildClasses(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddAttributeSensors, AddAttributesToActualPrice), update_before_add=True)
