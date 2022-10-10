@@ -1,26 +1,12 @@
 """Platform for sensor integration."""
-from operator import truediv
-from pickle import FALSE
-import string
-from time import time
-from typing import Any
-from typing_extensions import Required
-from xmlrpc.client import boolean
 
-from numpy import positive
 import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.components.sensor import (
-    DEVICE_CLASS_MONETARY,
-    SensorEntity,
-    SensorEntityDescription,
-)
+from homeassistant.components.sensor import SensorEntity
 
 """ External Imports """
 import logging
-from enum import Enum
 import requests
 import datetime
 
