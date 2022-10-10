@@ -43,7 +43,7 @@ entities:
 
 ```
 
-### Lowest Highest Price Active Cards
+### Lowest Highest Price Active Card
 
 ```yaml
 type: entities
