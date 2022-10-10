@@ -1,5 +1,4 @@
 """Platform for sensor integration."""
-
 import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
