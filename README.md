@@ -13,8 +13,8 @@ Once you've installed the custom integration, add the following to your `configu
 sensor:
   - platform: ote_energy_parser_czk         # Name of the addons folder
     course_code: EUR                        # Currency code (ISO 4217) to be converted to CZK [string]
-    measure_unit: 0                         # 0 = MWh, 1 = kWh, > 1 = Wh [int]
-    unit_of_measurement: kč/kWh             # Viewed unit [string]
+    measure_unit: 1                         # 0 = MWh, 1 = kWh, > 1 = Wh [int]
+    unit_of_measurement: Kč/kWh             # Viewed unit [string]
     decimal_places: 5                       # Decimal places [int]
     scan_interval: 10                       # Refresh interval [int][sec]
     add_attribute_sensors: false            # true = Enable, false = Disable
