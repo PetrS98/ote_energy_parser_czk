@@ -18,6 +18,10 @@ CONF_DECIMAL_PLACES = "decimal_places"
 CONF_UNIT_OF_MEASUREMENT = "unit_of_measurement"
 CONF_ADD_ATTRIBUTE_SENSORS = "add_attribute_sensors"
 CONF_ADD_ATTRIBUTES_TO_ACTUAL_PRICE = "add_attributes_to_actual_price"
+CONF_HIGHEST_PRICE_FROM_HOUR = "highest_price_from_hour"
+CONF_HIGHEST_PRICE_TO_HOUR = "highest_price_to_hour"
+CONF_LOWEST_PRICE_FROM_HOUR = "lowest_price_from_hour"
+CONF_LOWEST_PRICE_TO_HOUR = "lowest_price_to_hour"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,11 +32,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Required(CONF_DECIMAL_PLACES): cv.positive_int,
         vol.Required(CONF_ADD_ATTRIBUTE_SENSORS): cv.boolean,
-        vol.Required(CONF_ADD_ATTRIBUTES_TO_ACTUAL_PRICE): cv.boolean
+        vol.Required(CONF_ADD_ATTRIBUTES_TO_ACTUAL_PRICE): cv.boolean,
+        vol.Required(CONF_HIGHEST_PRICE_FROM_HOUR): cv.positive_int,
+        vol.Required(CONF_HIGHEST_PRICE_TO_HOUR): cv.positive_int,
+        vol.Required(CONF_LOWEST_PRICE_FROM_HOUR): cv.positive_int,
+        vol.Required(CONF_LOWEST_PRICE_TO_HOUR): cv.positive_int
     }
 )
 
-def BuildClasses(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddAttributeSensors, AddAttributesToActualPrice):
+def BuildClasses(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddAttributeSensors, AddAttributesToActualPrice, HighestPriceFromHour, HighestPriceToHour, LowestPriceFromHour, LowestPriceToHour):
     Classes = []
 
     if AddAttributeSensors:
@@ -40,11 +48,11 @@ def BuildClasses(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddA
         for x in range(24):
             Classes.append(OTERateSensor_Attribut(x, CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement))
 
-    Classes.append(OTERateSensor_HighestPrice(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement))
-    Classes.append(OTERateSensor_LowestPrice(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement))
+    Classes.append(OTERateSensor_HighestPrice(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, HighestPriceFromHour, HighestPriceToHour))
+    Classes.append(OTERateSensor_LowestPrice(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, LowestPriceFromHour, LowestPriceToHour))
     Classes.append(OTERateSensor_Actual(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddAttributesToActualPrice))
-    Classes.append(OTERateSensor_HighestPriceHour(CourseCode, MeasureUnit))
-    Classes.append(OTERateSensor_LowestPriceHour(CourseCode, MeasureUnit))
+    Classes.append(OTERateSensor_HighestPriceHour(CourseCode, MeasureUnit, HighestPriceFromHour, HighestPriceToHour))
+    Classes.append(OTERateSensor_LowestPriceHour(CourseCode, MeasureUnit, LowestPriceFromHour, LowestPriceToHour))
     return Classes
 
 def GetDataFromOTE():
@@ -238,7 +246,7 @@ class OTERateSensor_Attribut(SensorEntity):
 class OTERateSensor_HighestPrice(SensorEntity):
     """Representation of a Sensor."""
 
-    def __init__(self, CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement):
+    def __init__(self, CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, HighestPriceFromHour, HighestPriceToHour):
         """Initialize the sensor."""
 
         self.val = None
@@ -247,6 +255,8 @@ class OTERateSensor_HighestPrice(SensorEntity):
         self._measureUnit = MeasureUnit
         self._decimalPlaces = DecimalPlaces
         self._unitOfMeasurement = UnitOfMeasurement
+        self._highestPriceFromHour = HighestPriceFromHour
+        self._highestPriceToHour = HighestPriceToHour
 
     @property
     def unique_id(self):
@@ -288,18 +298,27 @@ class OTERateSensor_HighestPrice(SensorEntity):
 
     def GetHighestPrice(self):
         OTEData = RecalculateOTEData(self._courseCode, self._measureUnit)
+        OTEDataFiltred = []
         
         if len(OTEData) < 1:
             self.avail = False
             return 0.0
 
+        for i in range(len(OTEData)):
+            if i >= self._highestPriceFromHour and i <= self._highestPriceToHour:
+                OTEDataFiltred.append(OTEData[i])
+
+        if len(OTEDataFiltred) < 1:
+            self.avail = False
+            return 0.0
+
         self.avail = True
-        return max(OTEData)
+        return max(OTEDataFiltred)
         
 class OTERateSensor_LowestPrice(SensorEntity):
     """Representation of a Sensor."""
 
-    def __init__(self, CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement):
+    def __init__(self, CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, LowestPriceFromHour, LowestPriceToHour):
         """Initialize the sensor."""
 
         self.val = None
@@ -308,6 +327,8 @@ class OTERateSensor_LowestPrice(SensorEntity):
         self._measureUnit = MeasureUnit
         self._decimalPlaces = DecimalPlaces
         self._unitOfMeasurement = UnitOfMeasurement
+        self._lowestPriceFromHour = LowestPriceFromHour
+        self._lowestPriceToHour = LowestPriceToHour
 
     @property
     def unique_id(self):
@@ -349,24 +370,35 @@ class OTERateSensor_LowestPrice(SensorEntity):
 
     def GetLowestPrice(self):
         OTEData = RecalculateOTEData(self._courseCode, self._measureUnit)
+        OTEDataFiltred = []
         
         if len(OTEData) < 1:
             self.avail = False
             return 0.0
 
+        for i in range(len(OTEData)):
+            if i >= self._lowestPriceFromHour and i <= self._lowestPriceToHour:
+                OTEDataFiltred.append(OTEData[i])
+
+        if len(OTEDataFiltred) < 1:
+            self.avail = False
+            return 0.0
+
         self.avail = True
-        return min(OTEData)
+        return min(OTEDataFiltred)
 
 class OTERateSensor_HighestPriceHour(SensorEntity):
     """Representation of a Sensor."""
 
-    def __init__(self, CourseCode, MeasureUnit):
+    def __init__(self, CourseCode, MeasureUnit, HighestPriceFromHour, HighestPriceToHour):
         """Initialize the sensor."""
 
         self.val = None
         self.avail = None
         self._courseCode = CourseCode
         self._measureUnit = MeasureUnit
+        self._highestPriceFromHour = HighestPriceFromHour
+        self._highestPriceToHour = HighestPriceToHour
 
     @property
     def unique_id(self):
@@ -401,7 +433,17 @@ class OTERateSensor_HighestPriceHour(SensorEntity):
         """
         try:
             OTEData = RecalculateOTEData(self._courseCode, self._measureUnit)
-            MaxPrice = max(OTEData)
+            OTEDataFiltred = []
+
+            for i in range(len(OTEData)):
+                if i >= self._highestPriceFromHour and i <= self._highestPriceToHour:
+                    OTEDataFiltred.append(OTEData[i])
+
+            if len(OTEDataFiltred) < 1:
+                self.avail = False
+                return 0.0
+
+            MaxPrice = max(OTEDataFiltred)
             DataIndex = OTEData.index(MaxPrice)
             self.val = format(f"{DataIndex:02d}") + ":00 - " + format(f"{DataIndex:02d}") + ":59"
             self.avail = True
@@ -411,13 +453,15 @@ class OTERateSensor_HighestPriceHour(SensorEntity):
 class OTERateSensor_LowestPriceHour(SensorEntity):
     """Representation of a Sensor."""
 
-    def __init__(self, CourseCode, MeasureUnit):
+    def __init__(self, CourseCode, MeasureUnit, LowestPriceFromHour, LowestPriceToHour):
         """Initialize the sensor."""
 
         self.val = None
         self.avail = None
         self._courseCode = CourseCode
         self._measureUnit = MeasureUnit
+        self._lowestPriceFromHour = LowestPriceFromHour
+        self._lowestPriceToHour = LowestPriceToHour
 
     @property
     def unique_id(self):
@@ -452,7 +496,17 @@ class OTERateSensor_LowestPriceHour(SensorEntity):
         """
         try:
             OTEData = RecalculateOTEData(self._courseCode, self._measureUnit)
-            MinPrice = min(OTEData)
+            OTEDataFiltred = []
+
+            for i in range(len(OTEData)):
+                if i >= self._lowestPriceFromHour and i <= self._lowestPriceToHour:
+                    OTEDataFiltred.append(OTEData[i])
+
+            if len(OTEDataFiltred) < 1:
+                self.avail = False
+                return
+
+            MinPrice = min(OTEDataFiltred)
             DataIndex = OTEData.index(MinPrice)
             self.val = format(f"{DataIndex:02d}") + ":00 - " + format(f"{DataIndex:02d}") + ":59"
             self.avail = True
@@ -467,5 +521,10 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     DecimalPlaces = config.get(CONF_DECIMAL_PLACES)
     AddAttributeSensors = config.get(CONF_ADD_ATTRIBUTE_SENSORS)
     AddAttributesToActualPrice = config.get(CONF_ADD_ATTRIBUTES_TO_ACTUAL_PRICE)
+    HighestPriceFromHour = config.get(CONF_HIGHEST_PRICE_FROM_HOUR)
+    HighestPriceToHour = config.get(CONF_HIGHEST_PRICE_TO_HOUR)
+    LowestPriceFromHour = config.get(CONF_LOWEST_PRICE_FROM_HOUR)
+    LowestPriceToHour = config.get(CONF_LOWEST_PRICE_TO_HOUR)
 
-    add_entities(BuildClasses(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddAttributeSensors, AddAttributesToActualPrice), update_before_add=True)
+    add_entities(BuildClasses(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddAttributeSensors, AddAttributesToActualPrice,
+                              HighestPriceFromHour, HighestPriceToHour, LowestPriceFromHour, LowestPriceToHour), update_before_add=True)
