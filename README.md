@@ -19,10 +19,18 @@ sensor:
     scan_interval: 10                       # Refresh interval [int][sec]
     add_attribute_sensors: false            # true = Enable, false = Disable
     add_attributes_to_actual_price: false   # true = Enable, false = Disable
+    highest_price_from_hour: 0              # Filter for highest price (FROM)
+    highest_price_to_hour: 6                # Filter for highest price (TO)
+    lowest_price_from_hour: 0               # Filter for lowest price (FROM)
+    lowest_price_to_hour: 6                 # Filter for lowest price (TO) 
 
 binary_sensor:
   - platform: ote_energy_parser_czk
     scan_interval: 10
+    highest_price_from_hour: 0              # Filter for highest price (FROM)
+    highest_price_to_hour: 6                # Filter for highest price (TO)
+    lowest_price_from_hour: 0               # Filter for lowest price (FROM)
+    lowest_price_to_hour: 6                 # Filter for lowest price (TO) 
 ```
 ### The Most Importent Parameters Card
 
