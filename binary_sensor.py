@@ -1,5 +1,4 @@
 import logging
-from . import OteLib 
 from . import ActualData
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
@@ -43,7 +42,6 @@ class OTERateSensor_HighestPrice_Active(BinarySensorEntity):
 
     def update(self):
 
-        if (ActualData.OteData == None or len(ActualData.OteData) <= 0): return
         if (ActualData.OTEDataFiltredHP == None or len(ActualData.OTEDataFiltredHP) <= 0): return
 
         try:
@@ -52,9 +50,8 @@ class OTERateSensor_HighestPrice_Active(BinarySensorEntity):
                 return
 
             MaxPrice = max(ActualData.OTEDataFiltredHP)
-            ActualPrice = OteLib.GetActualEnergyPrice(ActualData.OteData)
 
-            if abs(MaxPrice - ActualPrice) < 0.000001:
+            if abs(MaxPrice - ActualData.ActualPrice) < 0.000001:
                 self._active = True
             else:
                 self._active = False  
@@ -94,7 +91,6 @@ class OTERateSensor_LowestPrice_Active(BinarySensorEntity):
 
     def update(self):
 
-        if (ActualData.OteData == None or len(ActualData.OteData) <= 0): return
         if (ActualData.OTEDataFiltredLP == None or len(ActualData.OTEDataFiltredLP) <= 0): return
 
         try:
@@ -103,9 +99,8 @@ class OTERateSensor_LowestPrice_Active(BinarySensorEntity):
                 return
 
             MinPrice = min(ActualData.OTEDataFiltredLP)
-            ActualPrice = OteLib.GetActualEnergyPrice(ActualData.OteData)
 
-            if abs(MinPrice - ActualPrice) < 0.000001:
+            if abs(MinPrice - ActualData.ActualPrice) < 0.000001:
                 self._active = True
             else:
                 self._active = False
