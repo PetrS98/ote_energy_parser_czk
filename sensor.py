@@ -138,6 +138,7 @@ class OTERateSensor_Actual(SensorEntity):
             self._value = round(OteLib.GetActualEnergyPrice(self.OTEData), self._decimalPlaces)
 
             ActualData.OteData = self.OTEData
+            ActualData.ActualPrice = self._value
 
             if self._addAttributesToActualPrice:
                 for x in range(len(self.OTEData)):
