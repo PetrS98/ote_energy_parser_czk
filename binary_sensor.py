@@ -23,7 +23,7 @@ class OTERateSensor_HighestPrice_Active(BinarySensorEntity):
 
     @property
     def name(self):
-        return "test OTE Energy CZK - Highest Price Active"
+        return "OTE Energy CZK - Highest Price Active"
 
     @property
     def is_on(self):
@@ -39,7 +39,7 @@ class OTERateSensor_HighestPrice_Active(BinarySensorEntity):
 
     @property
     def unique_id(self):
-        return "test OTE Energy CZK - Highest Price - Active MAIN"
+        return "OTE Energy CZK - Highest Price - Active MAIN"
 
     def update(self):
         try:
@@ -70,7 +70,7 @@ class OTERateSensor_LowestPrice_Active(BinarySensorEntity):
 
     @property
     def name(self):
-        return "test OTE Energy CZK - Lowest Price Active"
+        return "OTE Energy CZK - Lowest Price Active"
 
     @property
     def is_on(self):
@@ -86,7 +86,7 @@ class OTERateSensor_LowestPrice_Active(BinarySensorEntity):
 
     @property
     def unique_id(self):
-        return "test OTE Energy CZK - Lowest Price - Active MAIN"
+        return "OTE Energy CZK - Lowest Price - Active MAIN"
 
     def update(self):
         try:

@@ -79,12 +79,12 @@ class OTERateSensor_Actual(SensorEntity):
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        return "test OTE Energy CZK - Actual Price - MAIN"
+        return "OTE Energy CZK - Actual Price - MAIN"
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "test OTE Energy CZK - Actual Price"
+        return "OTE Energy CZK - Actual Price"
 
     @property
     def native_value(self):
@@ -166,12 +166,12 @@ class OTERateSensor_Attribut(SensorEntity):
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        return "test OTE Energy CZK - Attributs - "+ str(self.AttIndex)
+        return "OTE Energy CZK - Attributs - "+ str(self.AttIndex)
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "test OTE Energy CZK - Attribut " + str(self.AttIndex)
+        return "OTE Energy CZK - Attribut " + str(self.AttIndex)
 
     @property
     def native_value(self):
@@ -224,12 +224,12 @@ class OTERateSensor_HighestPrice(SensorEntity):
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        return "test OTE Energy CZK - Highest Price - MAIN"
+        return "OTE Energy CZK - Highest Price - MAIN"
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "test OTE Energy CZK - Highest Price"
+        return "OTE Energy CZK - Highest Price"
 
     @property
     def native_value(self):
@@ -286,12 +286,12 @@ class OTERateSensor_LowestPrice(SensorEntity):
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        return "test OTE Energy CZK - Lowest Price - MAIN"
+        return "OTE Energy CZK - Lowest Price - MAIN"
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "test OTE Energy CZK - Lowest Price"
+        return "OTE Energy CZK - Lowest Price"
 
     @property
     def native_value(self):
@@ -346,12 +346,12 @@ class OTERateSensor_HighestPriceHour(SensorEntity):
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        return "test OTE Energy CZK - Highest Price Hour - MAIN"
+        return "OTE Energy CZK - Highest Price Hour - MAIN"
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "test OTE Energy CZK - Highest Price Hour"
+        return "OTE Energy CZK - Highest Price Hour"
 
     @property
     def native_value(self):
@@ -398,12 +398,12 @@ class OTERateSensor_LowestPriceHour(SensorEntity):
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        return "test OTE Energy CZK - Lowest Price Hour - MAIN"
+        return "OTE Energy CZK - Lowest Price Hour - MAIN"
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "test OTE Energy CZK - Lowest Price Hour"
+        return "OTE Energy CZK - Lowest Price Hour"
 
     @property
     def native_value(self):
