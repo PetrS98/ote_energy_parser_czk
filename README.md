@@ -27,10 +27,6 @@ sensor:
 binary_sensor:
   - platform: ote_energy_parser_czk
     scan_interval: 10
-    highest_price_from_hour: 0              # Filter for highest price (FROM)
-    highest_price_to_hour: 6                # Filter for highest price (TO)
-    lowest_price_from_hour: 0               # Filter for lowest price (FROM)
-    lowest_price_to_hour: 6                 # Filter for lowest price (TO) 
 ```
 ### The Most Importent Parameters Card
 

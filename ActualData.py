@@ -1,0 +1,3 @@
+OteData = []
+OTEDataFiltredHP = []
+OTEDataFiltredLP = []

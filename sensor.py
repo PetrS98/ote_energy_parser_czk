@@ -7,6 +7,7 @@ from homeassistant.components.sensor import SensorEntity
 """ External Imports """
 import logging
 from . import OteLib
+from . import ActualData
 
 """ Constants """
 DEVICE_CLASS = "monetary"
@@ -45,20 +46,20 @@ def BuildClasses(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddA
     if AddAttributeSensors:
 
         for x in range(24):
-            Classes.append(OTERateSensor_Attribut(x, CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement))
+            Classes.append(OTERateSensor_Attribut(x, DecimalPlaces, UnitOfMeasurement))
 
-    Classes.append(OTERateSensor_HighestPrice(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, HighestPriceFromHour, HighestPriceToHour))
-    Classes.append(OTERateSensor_LowestPrice(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, LowestPriceFromHour, LowestPriceToHour))
-    Classes.append(OTERateSensor_Actual(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddAttributesToActualPrice))
-    Classes.append(OTERateSensor_HighestPriceHour(CourseCode, MeasureUnit, HighestPriceFromHour, HighestPriceToHour))
-    Classes.append(OTERateSensor_LowestPriceHour(CourseCode, MeasureUnit, LowestPriceFromHour, LowestPriceToHour))
+    Classes.append(OTERateSensor_HighestPrice(DecimalPlaces, UnitOfMeasurement))
+    Classes.append(OTERateSensor_LowestPrice(DecimalPlaces, UnitOfMeasurement))
+    Classes.append(OTERateSensor_Actual(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddAttributesToActualPrice, HighestPriceFromHour, HighestPriceToHour, LowestPriceFromHour, LowestPriceToHour))
+    Classes.append(OTERateSensor_HighestPriceHour())
+    Classes.append(OTERateSensor_LowestPriceHour())
     return Classes
 
 class OTERateSensor_Actual(SensorEntity):
 
     """Representation of a Sensor."""
 
-    def __init__(self, CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddAttributesToActualPrice):
+    def __init__(self, CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddAttributesToActualPrice, HighestPriceFromHour, HighestPriceToHour, LowestPriceFromHour, LowestPriceToHour):
         """Initialize the sensor."""
 
         self._value = None
@@ -69,17 +70,21 @@ class OTERateSensor_Actual(SensorEntity):
         self._decimalPlaces = DecimalPlaces
         self._unitOfMeasurement = UnitOfMeasurement
         self._addAttributesToActualPrice = AddAttributesToActualPrice
+        self._highestPriceFromHour = HighestPriceFromHour
+        self._highestPriceToHour = HighestPriceToHour
+        self._lowestPriceFromHour = LowestPriceFromHour
+        self._lowestPriceToHour = LowestPriceToHour
         self._valueDict = dict()
 
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        return "OTE Energy CZK - Actual Price - MAIN"
+        return "test OTE Energy CZK - Actual Price - MAIN"
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "OTE Energy CZK - Actual Price"
+        return "test OTE Energy CZK - Actual Price"
 
     @property
     def native_value(self):
@@ -115,6 +120,8 @@ class OTERateSensor_Actual(SensorEntity):
             self.OTEData = OteLib.RecalculateOTEData(self._courseCode, self._measureUnit)
             self._value = round(OteLib.GetActualEnergyPrice(self.OTEData), self._decimalPlaces)
 
+            ActualData.OteData = self.OTEData
+
             if self._addAttributesToActualPrice:
                 for x in range(len(self.OTEData)):
                     self._valueDict[format(f"{x:02d}") + ":00 - " + format(f"{x:02d}") + ":59"] = self.OTEData[x]
@@ -122,32 +129,49 @@ class OTERateSensor_Actual(SensorEntity):
             self._available = True
         except:
             _LOGGER.exception("Error occured while retrieving data from ote-cr.cz.")
-            self._available = False   
+            self._available = False  
+
+        try:
+            OTEDataFiltred = []
+
+            for i in range(len(self.OTEData)):
+                if i >= self._highestPriceFromHour and i <= self._highestPriceToHour:
+                    OTEDataFiltred.append(self.OTEData[i])
+
+            ActualData.OTEDataFiltredHP = OTEDataFiltred
+            OTEDataFiltred.clear()
+
+            for i in range(len(ActualData.OteData)):
+                if i >= self._lowestPriceFromHour and i <= self._lowestPriceToHour:
+                    OTEDataFiltred.append(ActualData.OteData[i])
+
+            ActualData.OTEDataFiltredLP = OTEDataFiltred
+
+        except:
+            _LOGGER.exception("Error occured while filtering data.")
 
 class OTERateSensor_Attribut(SensorEntity):
 
     """Representation of a Sensor.""" 
 
-    def __init__(self, AttributIndex, CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement):
+    def __init__(self, AttributIndex, DecimalPlaces, UnitOfMeasurement):
         """Initialize the sensor."""
 
         self._value = None
         self._available = None
         self.AttIndex = AttributIndex
-        self._courseCode = CourseCode
-        self._measureUnit = MeasureUnit
         self._decimalPlaces = DecimalPlaces  
         self._unitOfMeasurement = UnitOfMeasurement
 
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        return "OTE Energy CZK - Attributs - "+ str(self.AttIndex)
+        return "test OTE Energy CZK - Attributs - "+ str(self.AttIndex)
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "OTE Energy CZK - Attribut " + str(self.AttIndex)
+        return "test OTE Energy CZK - Attribut " + str(self.AttIndex)
 
     @property
     def native_value(self):
@@ -174,39 +198,38 @@ class OTERateSensor_Attribut(SensorEntity):
         """Fetch new state data for the sensor.
         This is the only method that should fetch new data for Home Assistant.
         """
-        OTEData = OteLib.RecalculateOTEData(self._courseCode, self._measureUnit)
 
-        if len(OTEData) >= self.AttIndex + 1:
-            self._available = True
-        else:
-            self._available = False
+        try:
 
-        self._value = round(OTEData[self.AttIndex], self._decimalPlaces)
+            if len(ActualData.OteData) >= self.AttIndex + 1:
+                self._available = True
+            else:
+                self._available = False
+
+            self._value = round(ActualData.OteData[self.AttIndex], self._decimalPlaces)
+        except:
+            _LOGGER.exception("Error")
     
 class OTERateSensor_HighestPrice(SensorEntity):
     """Representation of a Sensor."""
 
-    def __init__(self, CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, HighestPriceFromHour, HighestPriceToHour):
+    def __init__(self, DecimalPlaces, UnitOfMeasurement):
         """Initialize the sensor."""
 
         self.val = None
         self.avail = None
-        self._courseCode = CourseCode
-        self._measureUnit = MeasureUnit
         self._decimalPlaces = DecimalPlaces
         self._unitOfMeasurement = UnitOfMeasurement
-        self._highestPriceFromHour = HighestPriceFromHour
-        self._highestPriceToHour = HighestPriceToHour
 
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        return "OTE Energy CZK - Highest Price - MAIN"
+        return "test OTE Energy CZK - Highest Price - MAIN"
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "OTE Energy CZK - Highest Price"
+        return "test OTE Energy CZK - Highest Price"
 
     @property
     def native_value(self):
@@ -237,48 +260,38 @@ class OTERateSensor_HighestPrice(SensorEntity):
         self.val = round(self.GetHighestPrice(), self._decimalPlaces) 
 
     def GetHighestPrice(self):
-        OTEData = OteLib.RecalculateOTEData(self._courseCode, self._measureUnit)
-        OTEDataFiltred = []
         
-        if len(OTEData) < 1:
+        if len(ActualData.OteData) < 1:
             self.avail = False
             return 0.0
 
-        for i in range(len(OTEData)):
-            if i >= self._highestPriceFromHour and i <= self._highestPriceToHour:
-                OTEDataFiltred.append(OTEData[i])
-
-        if len(OTEDataFiltred) < 1:
+        if len(ActualData.OTEDataFiltredHP) < 1:
             self.avail = False
             return 0.0
 
         self.avail = True
-        return max(OTEDataFiltred)
+        return max(ActualData.OTEDataFiltredHP)
         
 class OTERateSensor_LowestPrice(SensorEntity):
     """Representation of a Sensor."""
 
-    def __init__(self, CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, LowestPriceFromHour, LowestPriceToHour):
+    def __init__(self, DecimalPlaces, UnitOfMeasurement):
         """Initialize the sensor."""
 
         self.val = None
         self.avail = None
-        self._courseCode = CourseCode
-        self._measureUnit = MeasureUnit
         self._decimalPlaces = DecimalPlaces
         self._unitOfMeasurement = UnitOfMeasurement
-        self._lowestPriceFromHour = LowestPriceFromHour
-        self._lowestPriceToHour = LowestPriceToHour
 
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        return "OTE Energy CZK - Lowest Price - MAIN"
+        return "test OTE Energy CZK - Lowest Price - MAIN"
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "OTE Energy CZK - Lowest Price"
+        return "test OTE Energy CZK - Lowest Price"
 
     @property
     def native_value(self):
@@ -309,46 +322,36 @@ class OTERateSensor_LowestPrice(SensorEntity):
         self.val = round(self.GetLowestPrice(), self._decimalPlaces) 
 
     def GetLowestPrice(self):
-        OTEData = OteLib.RecalculateOTEData(self._courseCode, self._measureUnit)
-        OTEDataFiltred = []
         
-        if len(OTEData) < 1:
+        if len(ActualData.OteData) < 1:
             self.avail = False
             return 0.0
 
-        for i in range(len(OTEData)):
-            if i >= self._lowestPriceFromHour and i <= self._lowestPriceToHour:
-                OTEDataFiltred.append(OTEData[i])
-
-        if len(OTEDataFiltred) < 1:
+        if len(ActualData.OTEDataFiltredLP) < 1:
             self.avail = False
             return 0.0
 
         self.avail = True
-        return min(OTEDataFiltred)
+        return min(ActualData.OTEDataFiltredLP)
 
 class OTERateSensor_HighestPriceHour(SensorEntity):
     """Representation of a Sensor."""
 
-    def __init__(self, CourseCode, MeasureUnit, HighestPriceFromHour, HighestPriceToHour):
+    def __init__(self):
         """Initialize the sensor."""
 
         self.val = None
         self.avail = None
-        self._courseCode = CourseCode
-        self._measureUnit = MeasureUnit
-        self._highestPriceFromHour = HighestPriceFromHour
-        self._highestPriceToHour = HighestPriceToHour
 
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        return "OTE Energy CZK - Highest Price Hour - MAIN"
+        return "test OTE Energy CZK - Highest Price Hour - MAIN"
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "OTE Energy CZK - Highest Price Hour"
+        return "test OTE Energy CZK - Highest Price Hour"
 
     @property
     def native_value(self):
@@ -372,19 +375,12 @@ class OTERateSensor_HighestPriceHour(SensorEntity):
         This is the only method that should fetch new data for Home Assistant.
         """
         try:
-            OTEData = OteLib.RecalculateOTEData(self._courseCode, self._measureUnit)
-            OTEDataFiltred = []
-
-            for i in range(len(OTEData)):
-                if i >= self._highestPriceFromHour and i <= self._highestPriceToHour:
-                    OTEDataFiltred.append(OTEData[i])
-
-            if len(OTEDataFiltred) < 1:
+            if len(ActualData.OTEDataFiltredHP) < 1:
                 self.avail = False
                 return 0.0
 
-            MaxPrice = max(OTEDataFiltred)
-            DataIndex = OTEData.index(MaxPrice)
+            MaxPrice = max(ActualData.OTEDataFiltredHP)
+            DataIndex = ActualData.OteData.index(MaxPrice)
             self.val = format(f"{DataIndex:02d}") + ":00 - " + format(f"{DataIndex:02d}") + ":59"
             self.avail = True
         except:
@@ -393,25 +389,21 @@ class OTERateSensor_HighestPriceHour(SensorEntity):
 class OTERateSensor_LowestPriceHour(SensorEntity):
     """Representation of a Sensor."""
 
-    def __init__(self, CourseCode, MeasureUnit, LowestPriceFromHour, LowestPriceToHour):
+    def __init__(self):
         """Initialize the sensor."""
 
         self.val = None
         self.avail = None
-        self._courseCode = CourseCode
-        self._measureUnit = MeasureUnit
-        self._lowestPriceFromHour = LowestPriceFromHour
-        self._lowestPriceToHour = LowestPriceToHour
 
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        return "OTE Energy CZK - Lowest Price Hour - MAIN"
+        return "test OTE Energy CZK - Lowest Price Hour - MAIN"
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "OTE Energy CZK - Lowest Price Hour"
+        return "test OTE Energy CZK - Lowest Price Hour"
 
     @property
     def native_value(self):
@@ -435,19 +427,12 @@ class OTERateSensor_LowestPriceHour(SensorEntity):
         This is the only method that should fetch new data for Home Assistant.
         """
         try:
-            OTEData = OteLib.RecalculateOTEData(self._courseCode, self._measureUnit)
-            OTEDataFiltred = []
-
-            for i in range(len(OTEData)):
-                if i >= self._lowestPriceFromHour and i <= self._lowestPriceToHour:
-                    OTEDataFiltred.append(OTEData[i])
-
-            if len(OTEDataFiltred) < 1:
+            if len(ActualData.OTEDataFiltredLP) < 1:
                 self.avail = False
                 return
 
-            MinPrice = min(OTEDataFiltred)
-            DataIndex = OTEData.index(MinPrice)
+            MinPrice = min(ActualData.OTEDataFiltredLP)
+            DataIndex = ActualData.OteData.index(MinPrice)
             self.val = format(f"{DataIndex:02d}") + ":00 - " + format(f"{DataIndex:02d}") + ":59"
             self.avail = True
         except:
