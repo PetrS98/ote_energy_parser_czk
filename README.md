@@ -26,7 +26,7 @@ sensor:
 
 binary_sensor:
   - platform: ote_energy_parser_czk
-    scan_interval: 10
+    scan_interval: 10                       # Refresh interval [int][sec]
 ```
 ### The Most Importent Parameters Card
 
