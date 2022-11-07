@@ -6,8 +6,7 @@ from homeassistant.components.sensor import SensorEntity
 
 """ External Imports """
 import logging
-import requests
-import datetime
+from . import OteLib
 
 """ Constants """
 DEVICE_CLASS = "monetary"
@@ -54,65 +53,6 @@ def BuildClasses(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddA
     Classes.append(OTERateSensor_HighestPriceHour(CourseCode, MeasureUnit, HighestPriceFromHour, HighestPriceToHour))
     Classes.append(OTERateSensor_LowestPriceHour(CourseCode, MeasureUnit, LowestPriceFromHour, LowestPriceToHour))
     return Classes
-
-def GetDataFromOTE():
-    """Return data from ote-cr in [EUR/MWh]"""
-
-    date = datetime.datetime.now()
-    params = dict (date = date.strftime('%Y-%m-%d'))
-
-    data = []
-    response = requests.get(url="https://www.ote-cr.cz/cs/kratkodobe-trhy/elektrina/denni-trh/@@chart-data", params=params).json()
-
-    for i in range(len(response['data']['dataLine'][1]['point'])):
-        data.append(float(response['data']['dataLine'][1]['point'][i]['y']))
-
-    return data
-
-def GetCZKCourses():
-    """Return all czech croun cusrses. Data structure: Country|Currency|Amount|Code|Course"""
-
-    data = []
-    response = requests.get(url="https://www.cnb.cz/cs/financni-trhy/devizovy-trh/kurzy-devizoveho-trhu/kurzy-devizoveho-trhu/denni_kurz.txt").text
-
-    items = response.split("\n")
-
-    del items[0]
-    del items[0]
-    del items[len(items) -1]
-
-    for item in items:
-        lineData = item.split("|")
-        data.append(lineData)
-
-    return data
-
-def GetActualEnergyPrice(OTEData):
-    DateTime = datetime.datetime.now()
-
-    return OTEData[DateTime.hour]
-
-def RecalculateOTEData(CourseCode, Unit):
-    ReqCourse = []
-    RecalculateData = []
-
-    CZKCourses = GetCZKCourses()
-    OTEDayDataEUR = GetDataFromOTE()
-
-    for course in CZKCourses:
-        if CourseCode == course[3]:
-            ReqCourse = course
-            break
-
-    for HourData in OTEDayDataEUR:
-        if Unit == 0:
-            RecalculateData.append(HourData * (float(ReqCourse[4].replace(",", ".")) / float(ReqCourse[2].replace(",", "."))))
-        elif Unit == 1:
-            RecalculateData.append((HourData * (float(ReqCourse[4].replace(",", ".")) / float(ReqCourse[2].replace(",", ".")))) / 1000.0)
-        else:
-            RecalculateData.append((HourData * (float(ReqCourse[4].replace(",", ".")) / float(ReqCourse[2].replace(",", ".")))) / 1000000.0)
-
-    return RecalculateData
 
 class OTERateSensor_Actual(SensorEntity):
 
@@ -172,8 +112,8 @@ class OTERateSensor_Actual(SensorEntity):
         This is the only method that should fetch new data for Home Assistant.
         """
         try:
-            self.OTEData = RecalculateOTEData(self._courseCode, self._measureUnit)
-            self._value = round(GetActualEnergyPrice(self.OTEData), self._decimalPlaces)
+            self.OTEData = OteLib.RecalculateOTEData(self._courseCode, self._measureUnit)
+            self._value = round(OteLib.GetActualEnergyPrice(self.OTEData), self._decimalPlaces)
 
             if self._addAttributesToActualPrice:
                 for x in range(len(self.OTEData)):
@@ -234,7 +174,7 @@ class OTERateSensor_Attribut(SensorEntity):
         """Fetch new state data for the sensor.
         This is the only method that should fetch new data for Home Assistant.
         """
-        OTEData = RecalculateOTEData(self._courseCode, self._measureUnit)
+        OTEData = OteLib.RecalculateOTEData(self._courseCode, self._measureUnit)
 
         if len(OTEData) >= self.AttIndex + 1:
             self._available = True
@@ -297,7 +237,7 @@ class OTERateSensor_HighestPrice(SensorEntity):
         self.val = round(self.GetHighestPrice(), self._decimalPlaces) 
 
     def GetHighestPrice(self):
-        OTEData = RecalculateOTEData(self._courseCode, self._measureUnit)
+        OTEData = OteLib.RecalculateOTEData(self._courseCode, self._measureUnit)
         OTEDataFiltred = []
         
         if len(OTEData) < 1:
@@ -369,7 +309,7 @@ class OTERateSensor_LowestPrice(SensorEntity):
         self.val = round(self.GetLowestPrice(), self._decimalPlaces) 
 
     def GetLowestPrice(self):
-        OTEData = RecalculateOTEData(self._courseCode, self._measureUnit)
+        OTEData = OteLib.RecalculateOTEData(self._courseCode, self._measureUnit)
         OTEDataFiltred = []
         
         if len(OTEData) < 1:
@@ -432,7 +372,7 @@ class OTERateSensor_HighestPriceHour(SensorEntity):
         This is the only method that should fetch new data for Home Assistant.
         """
         try:
-            OTEData = RecalculateOTEData(self._courseCode, self._measureUnit)
+            OTEData = OteLib.RecalculateOTEData(self._courseCode, self._measureUnit)
             OTEDataFiltred = []
 
             for i in range(len(OTEData)):
@@ -495,7 +435,7 @@ class OTERateSensor_LowestPriceHour(SensorEntity):
         This is the only method that should fetch new data for Home Assistant.
         """
         try:
-            OTEData = RecalculateOTEData(self._courseCode, self._measureUnit)
+            OTEData = OteLib.RecalculateOTEData(self._courseCode, self._measureUnit)
             OTEDataFiltred = []
 
             for i in range(len(OTEData)):

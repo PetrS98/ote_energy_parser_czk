@@ -1,13 +1,11 @@
 import logging
-import datetime 
+from enum import Enum
+from . import OteLib
 
 import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import BinarySensorEntity
-
-import requests
-from enum import Enum
 
 class MeassureUnit(Enum):
     kWh = True
@@ -42,64 +40,6 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities([OTERateSensor_HighestPrice_Active(HighestPriceFromHour, HighestPriceToHour), OTERateSensor_LowestPrice_Active(LowestPriceFromHour, LowestPriceToHour)], update_before_add=True)
 
-def GetDataFromOTE():
-    """Return data from ote-cr in [EUR/MWh]"""
-
-    date = datetime.datetime.now()
-    params = dict (date = date.strftime('%Y-%m-%d'))
-
-    data = []
-    response = requests.get(url="https://www.ote-cr.cz/cs/kratkodobe-trhy/elektrina/denni-trh/@@chart-data", params=params).json()
-
-    for i in range(len(response['data']['dataLine'][1]['point'])):
-        data.append(float(response['data']['dataLine'][1]['point'][i]['y']))
-
-    return data
-
-def GetCZKCourses():
-    """Return all czech croun cusrses. Data structure: Country|Currency|Amount|Code|Course"""
-
-    data = []
-    response = requests.get(url="https://www.cnb.cz/cs/financni-trhy/devizovy-trh/kurzy-devizoveho-trhu/kurzy-devizoveho-trhu/denni_kurz.txt").text
-
-    items = response.split("\n")
-
-    del items[0]
-    del items[0]
-    del items[len(items) -1]
-
-    for item in items:
-        lineData = item.split("|")
-        data.append(lineData)
-
-    return data
-
-def GetActualEnergyPrice(OTEData):
-    DateTime = datetime.datetime.now()
-
-    return OTEData[DateTime.hour]
-
-def RecalculateOTEData(CourseCode, Unit):
-    ReqCourse = []
-    RecalculateData = []
-
-    CZKCourses = GetCZKCourses()
-    OTEDayDataEUR = GetDataFromOTE()
-
-    for course in CZKCourses:
-        if CourseCode == course[3]:
-            ReqCourse = course
-            break
-
-    for HourData in OTEDayDataEUR:
-        if Unit:
-            RecalculateData.append((HourData * (float(ReqCourse[4].replace(",", ".")) / float(ReqCourse[2].replace(",", ".")))) / 1000.0)
-            continue
-
-        RecalculateData.append(HourData * (float(ReqCourse[4].replace(",", ".")) / float(ReqCourse[2].replace(",", "."))))
-
-    return RecalculateData
-
 class OTERateSensor_HighestPrice_Active(BinarySensorEntity):
     def __init__(self, HighestPriceFromHour, HighestPriceToHour):
         """Initialize the sensor."""
@@ -133,7 +73,7 @@ class OTERateSensor_HighestPrice_Active(BinarySensorEntity):
 
     def update(self):
         try:
-            OTEData = RecalculateOTEData(COURSE_CODE, MEASSURE_UNIT)
+            OTEData = OteLib.RecalculateOTEData(COURSE_CODE, MEASSURE_UNIT)
             OTEDataFiltred = []
 
             for i in range(len(OTEData)):
@@ -145,7 +85,7 @@ class OTERateSensor_HighestPrice_Active(BinarySensorEntity):
                 return
 
             MaxPrice = max(OTEDataFiltred)
-            ActualPrice = GetActualEnergyPrice(OTEData)
+            ActualPrice = OteLib.GetActualEnergyPrice(OTEData)
 
             if abs(MaxPrice - ActualPrice) < 0.000001:
                 self._active = True
@@ -189,7 +129,7 @@ class OTERateSensor_LowestPrice_Active(BinarySensorEntity):
 
     def update(self):
         try:
-            OTEData = RecalculateOTEData(COURSE_CODE, MEASSURE_UNIT)
+            OTEData = OteLib.RecalculateOTEData(COURSE_CODE, MEASSURE_UNIT)
             OTEDataFiltred = []
 
             for i in range(len(OTEData)):
@@ -201,7 +141,7 @@ class OTERateSensor_LowestPrice_Active(BinarySensorEntity):
                 return
 
             MinPrice = min(OTEDataFiltred)
-            ActualPrice = GetActualEnergyPrice(OTEData)
+            ActualPrice = OteLib.GetActualEnergyPrice(OTEData)
 
             if abs(MinPrice - ActualPrice) < 0.000001:
                 self._active = True
