@@ -42,6 +42,10 @@ class OTERateSensor_HighestPrice_Active(BinarySensorEntity):
         return "OTE Energy CZK - Highest Price - Active MAIN"
 
     def update(self):
+
+        if (ActualData.OteData == None or len(ActualData.OteData) <= 0): return
+        if (ActualData.OTEDataFiltredHP == None or len(ActualData.OTEDataFiltredHP) <= 0): return
+
         try:
             if len(ActualData.OTEDataFiltredHP) < 1:
                 self._available = False
@@ -89,6 +93,10 @@ class OTERateSensor_LowestPrice_Active(BinarySensorEntity):
         return "OTE Energy CZK - Lowest Price - Active MAIN"
 
     def update(self):
+
+        if (ActualData.OteData == None or len(ActualData.OteData) <= 0): return
+        if (ActualData.OTEDataFiltredLP == None or len(ActualData.OTEDataFiltredLP) <= 0): return
+
         try:
             if len(ActualData.OTEDataFiltredLP) < 1:
                 self._available = False

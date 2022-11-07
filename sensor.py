@@ -40,8 +40,26 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the sensor platform."""
+    CourseCode = config.get(CONF_COURSE_CODE)
+    MeasureUnit = config.get(CONF_MEASURE_UNIT)
+    UnitOfMeasurement = config.get(CONF_UNIT_OF_MEASUREMENT)
+    DecimalPlaces = config.get(CONF_DECIMAL_PLACES)
+    AddAttributeSensors = config.get(CONF_ADD_ATTRIBUTE_SENSORS)
+    AddAttributesToActualPrice = config.get(CONF_ADD_ATTRIBUTES_TO_ACTUAL_PRICE)
+    HighestPriceFromHour = config.get(CONF_HIGHEST_PRICE_FROM_HOUR)
+    HighestPriceToHour = config.get(CONF_HIGHEST_PRICE_TO_HOUR)
+    LowestPriceFromHour = config.get(CONF_LOWEST_PRICE_FROM_HOUR)
+    LowestPriceToHour = config.get(CONF_LOWEST_PRICE_TO_HOUR)
+
+    add_entities(BuildClasses(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddAttributeSensors, AddAttributesToActualPrice,
+                              HighestPriceFromHour, HighestPriceToHour, LowestPriceFromHour, LowestPriceToHour), update_before_add=True)
+
 def BuildClasses(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddAttributeSensors, AddAttributesToActualPrice, HighestPriceFromHour, HighestPriceToHour, LowestPriceFromHour, LowestPriceToHour):
     Classes = []
+
+    Classes.append(OTERateSensor_Actual(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddAttributesToActualPrice, HighestPriceFromHour, HighestPriceToHour, LowestPriceFromHour, LowestPriceToHour))
 
     if AddAttributeSensors:
 
@@ -50,7 +68,6 @@ def BuildClasses(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddA
 
     Classes.append(OTERateSensor_HighestPrice(DecimalPlaces, UnitOfMeasurement))
     Classes.append(OTERateSensor_LowestPrice(DecimalPlaces, UnitOfMeasurement))
-    Classes.append(OTERateSensor_Actual(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddAttributesToActualPrice, HighestPriceFromHour, HighestPriceToHour, LowestPriceFromHour, LowestPriceToHour))
     Classes.append(OTERateSensor_HighestPriceHour())
     Classes.append(OTERateSensor_LowestPriceHour())
     return Classes
@@ -199,6 +216,8 @@ class OTERateSensor_Attribut(SensorEntity):
         This is the only method that should fetch new data for Home Assistant.
         """
 
+        if (ActualData.OteData == None or len(ActualData.OteData) <= 0): return
+
         try:
 
             if len(ActualData.OteData) >= self.AttIndex + 1:
@@ -208,7 +227,7 @@ class OTERateSensor_Attribut(SensorEntity):
 
             self._value = round(ActualData.OteData[self.AttIndex], self._decimalPlaces)
         except:
-            _LOGGER.exception("Error")
+            _LOGGER.exception("Error in attribute sensors")
     
 class OTERateSensor_HighestPrice(SensorEntity):
     """Representation of a Sensor."""
@@ -257,6 +276,10 @@ class OTERateSensor_HighestPrice(SensorEntity):
 
         This is the only method that should fetch new data for Home Assistant.
         """
+
+        if (ActualData.OteData == None or len(ActualData.OteData) <= 0): return
+        if (ActualData.OTEDataFiltredHP == None or len(ActualData.OTEDataFiltredHP) <= 0): return
+
         self.val = round(self.GetHighestPrice(), self._decimalPlaces) 
 
     def GetHighestPrice(self):
@@ -319,6 +342,10 @@ class OTERateSensor_LowestPrice(SensorEntity):
 
         This is the only method that should fetch new data for Home Assistant.
         """
+
+        if (ActualData.OteData == None or len(ActualData.OteData) <= 0): return
+        if (ActualData.OTEDataFiltredLP == None or len(ActualData.OTEDataFiltredLP) <= 0): return
+
         self.val = round(self.GetLowestPrice(), self._decimalPlaces) 
 
     def GetLowestPrice(self):
@@ -374,6 +401,10 @@ class OTERateSensor_HighestPriceHour(SensorEntity):
 
         This is the only method that should fetch new data for Home Assistant.
         """
+
+        if (ActualData.OteData == None or len(ActualData.OteData) <= 0): return
+        if (ActualData.OTEDataFiltredHP == None or len(ActualData.OTEDataFiltredHP) <= 0): return
+
         try:
             if len(ActualData.OTEDataFiltredHP) < 1:
                 self.avail = False
@@ -426,6 +457,10 @@ class OTERateSensor_LowestPriceHour(SensorEntity):
 
         This is the only method that should fetch new data for Home Assistant.
         """
+
+        if (ActualData.OteData == None or len(ActualData.OteData) <= 0): return
+        if (ActualData.OTEDataFiltredLP == None or len(ActualData.OTEDataFiltredLP) <= 0): return
+
         try:
             if len(ActualData.OTEDataFiltredLP) < 1:
                 self.avail = False
@@ -437,19 +472,3 @@ class OTERateSensor_LowestPriceHour(SensorEntity):
             self.avail = True
         except:
             self.avail = False   
-
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the sensor platform."""
-    CourseCode = config.get(CONF_COURSE_CODE)
-    MeasureUnit = config.get(CONF_MEASURE_UNIT)
-    UnitOfMeasurement = config.get(CONF_UNIT_OF_MEASUREMENT)
-    DecimalPlaces = config.get(CONF_DECIMAL_PLACES)
-    AddAttributeSensors = config.get(CONF_ADD_ATTRIBUTE_SENSORS)
-    AddAttributesToActualPrice = config.get(CONF_ADD_ATTRIBUTES_TO_ACTUAL_PRICE)
-    HighestPriceFromHour = config.get(CONF_HIGHEST_PRICE_FROM_HOUR)
-    HighestPriceToHour = config.get(CONF_HIGHEST_PRICE_TO_HOUR)
-    LowestPriceFromHour = config.get(CONF_LOWEST_PRICE_FROM_HOUR)
-    LowestPriceToHour = config.get(CONF_LOWEST_PRICE_TO_HOUR)
-
-    add_entities(BuildClasses(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddAttributeSensors, AddAttributesToActualPrice,
-                              HighestPriceFromHour, HighestPriceToHour, LowestPriceFromHour, LowestPriceToHour), update_before_add=True)
