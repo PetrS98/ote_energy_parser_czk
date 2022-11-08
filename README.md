@@ -61,7 +61,7 @@ entities:
 
 ```
 
-### Entity Card - Actual Attributes (Only if add_attribute_sensors_actual: true_)
+### Entity Card - Actual Attributes (Only if _add_attribute_sensors_actual: true_)
 
 ```yaml
 type: entities
@@ -117,7 +117,7 @@ entities:
     name: 23:00 - 23:59
 ```
 
-### Entity Card - Next Day Attributes (Only if add_attribute_sensors_next_day: true_)
+### Entity Card - Next Day Attributes (Only if _add_attribute_sensors_next_day: true_)
 
 ```yaml
 type: entities
