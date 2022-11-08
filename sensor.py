@@ -9,9 +9,14 @@ import logging
 from . import OteLib
 from . import GlobalData
 
-""" Constants """
+#region Constant
+
 DEVICE_CLASS = "monetary"
 STATE_CLASS = "measurement"
+
+#endregion
+
+#region Configuration
 
 CONF_COURSE_CODE = "course_code"
 CONF_MEASURE_UNIT = "measure_unit"
@@ -24,6 +29,8 @@ CONF_HIGHEST_PRICE_FROM_HOUR = "highest_price_from_hour"
 CONF_HIGHEST_PRICE_TO_HOUR = "highest_price_to_hour"
 CONF_LOWEST_PRICE_FROM_HOUR = "lowest_price_from_hour"
 CONF_LOWEST_PRICE_TO_HOUR = "lowest_price_to_hour"
+
+#endregion
 
 _LOGGER = logging.getLogger(__name__)
 
