@@ -15,17 +15,18 @@ sensor:
     course_code: EUR                        # Currency code (ISO 4217) to be converted to CZK [string]
     measure_unit: 1                         # 0 = MWh, 1 = kWh, > 1 = Wh [int]
     unit_of_measurement: Kč/kWh             # Viewed unit [string]
-    decimal_places: 5                       # Decimal places [int]
+    decimal_places: 3                       # Decimal places [int]
     scan_interval: 10                       # Refresh interval [int][sec]
-    add_attribute_sensors: false            # true = Enable, false = Disable
-    add_attributes_to_actual_price: false   # true = Enable, false = Disable
+    add_attribute_sensors_actual: false     # true = Enable, false = Disable
+    add_attributes_to_actual_price: true    # true = Enable, false = Disable
+    add_attribute_sensors_next_day: false   # true = Enable, false = Disable
     highest_price_from_hour: 0              # Filter for highest price (FROM)
     highest_price_to_hour: 6                # Filter for highest price (TO)
     lowest_price_from_hour: 0               # Filter for lowest price (FROM)
     lowest_price_to_hour: 6                 # Filter for lowest price (TO) 
 
 binary_sensor:
-  - platform: ote_energy_parser_czk
+  - platform: ote_energy_parser_czk         # Name of the addons folder
     scan_interval: 10                       # Refresh interval [int][sec]
 ```
 ### The Most Importent Parameters Card
@@ -60,58 +61,114 @@ entities:
 
 ```
 
-### Entity Card (Only if _add_attribute_sensors: true_)
+### Entity Card - Actual Attributes (Only if add_attribute_sensors_actual: true_)
 
 ```yaml
 type: entities
-title: OTE Energy CZK
+title: OTE Energy CZK - Actual
 entities:
-  - entity: sensor.ote_energy_czk_attribut_0
+  - entity: sensor.ote_energy_czk_actual_attribut_0
     name: 00:00 - 00:59
-  - entity: sensor.ote_energy_czk_attribut_1
+  - entity: sensor.ote_energy_czk_actual_attribut_1
     name: 01:00 - 01:59
-  - entity: sensor.ote_energy_czk_attribut_2
+  - entity: sensor.ote_energy_czk_actual_attribut_2
     name: 02:00 - 02:59
-  - entity: sensor.ote_energy_czk_attribut_3
+  - entity: sensor.ote_energy_czk_actual_attribut_3
     name: 03:00 - 03:59
-  - entity: sensor.ote_energy_czk_attribut_4
+  - entity: sensor.ote_energy_czk_actual_attribut_4
     name: 04:00 - 04:59
-  - entity: sensor.ote_energy_czk_attribut_5
+  - entity: sensor.ote_energy_czk_actual_attribut_5
     name: 05:00 - 05:59
-  - entity: sensor.ote_energy_czk_attribut_6
+  - entity: sensor.ote_energy_czk_actual_attribut_6
     name: 06:00 - 06:59
-  - entity: sensor.ote_energy_czk_attribut_7
+  - entity: sensor.ote_energy_czk_actual_attribut_7
     name: 07:00 - 07:59
-  - entity: sensor.ote_energy_czk_attribut_8
+  - entity: sensor.ote_energy_czk_actual_attribut_8
     name: 08:00 - 08:59
-  - entity: sensor.ote_energy_czk_attribut_9
+  - entity: sensor.ote_energy_czk_actual_attribut_9
     name: 09:00 - 09:59
-  - entity: sensor.ote_energy_czk_attribut_10
+  - entity: sensor.ote_energy_czk_actual_attribut_10
     name: 10:00 - 10:59
-  - entity: sensor.ote_energy_czk_attribut_11
+  - entity: sensor.ote_energy_czk_actual_attribut_11
     name: 11:00 - 11:59
-  - entity: sensor.ote_energy_czk_attribut_12
+  - entity: sensor.ote_energy_czk_actual_attribut_12
     name: 12:00 - 12:59
-  - entity: sensor.ote_energy_czk_attribut_13
+  - entity: sensor.ote_energy_czk_actual_attribut_13
     name: 13:00 - 13:59
-  - entity: sensor.ote_energy_czk_attribut_14
+  - entity: sensor.ote_energy_czk_actual_attribut_14
     name: 14:00 - 14:59
-  - entity: sensor.ote_energy_czk_attribut_15
+  - entity: sensor.ote_energy_czk_actual_attribut_15
     name: 15:00 - 15:59
-  - entity: sensor.ote_energy_czk_attribut_16
+  - entity: sensor.ote_energy_czk_actual_attribut_16
     name: 16:00 - 16:59
-  - entity: sensor.ote_energy_czk_attribut_17
+  - entity: sensor.ote_energy_czk_actual_attribut_17
     name: 17:00 - 17:59
-  - entity: sensor.ote_energy_czk_attribut_18
+  - entity: sensor.ote_energy_czk_actual_attribut_18
     name: 18:00 - 18:59
-  - entity: sensor.ote_energy_czk_attribut_19
+  - entity: sensor.ote_energy_czk_actual_attribut_19
     name: 19:00 - 19:59
-  - entity: sensor.ote_energy_czk_attribut_20
+  - entity: sensor.ote_energy_czk_actual_attribut_20
     name: 20:00 - 20:59
-  - entity: sensor.ote_energy_czk_attribut_21
+  - entity: sensor.ote_energy_czk_actual_attribut_21
     name: 21:00 - 21:59
-  - entity: sensor.ote_energy_czk_attribut_22
+  - entity: sensor.ote_energy_czk_actual_attribut_22
     name: 22:00 - 22:59
-  - entity: sensor.ote_energy_czk_attribut_23
+  - entity: sensor.ote_energy_czk_actual_attribut_23
+    name: 23:00 - 23:59
+```
+
+### Entity Card - Next Day Attributes (Only if add_attribute_sensors_next_day: true_)
+
+```yaml
+type: entities
+title: OTE Energy CZK - Next Day
+entities:
+  - entity: sensor.ote_energy_czk_next_day_attribut_0
+    name: 00:00 - 00:59
+  - entity: sensor.ote_energy_czk_next_day_attribut_1
+    name: 01:00 - 01:59
+  - entity: sensor.ote_energy_czk_next_day_attribut_2
+    name: 02:00 - 02:59
+  - entity: sensor.ote_energy_czk_next_day_attribut_3
+    name: 03:00 - 03:59
+  - entity: sensor.ote_energy_czk_next_day_attribut_4
+    name: 04:00 - 04:59
+  - entity: sensor.ote_energy_czk_next_day_attribut_5
+    name: 05:00 - 05:59
+  - entity: sensor.ote_energy_czk_next_day_attribut_6
+    name: 06:00 - 06:59
+  - entity: sensor.ote_energy_czk_next_day_attribut_7
+    name: 07:00 - 07:59
+  - entity: sensor.ote_energy_czk_next_day_attribut_8
+    name: 08:00 - 08:59
+  - entity: sensor.ote_energy_czk_next_day_attribut_9
+    name: 09:00 - 09:59
+  - entity: sensor.ote_energy_czk_next_day_attribut_10
+    name: 10:00 - 10:59
+  - entity: sensor.ote_energy_czk_next_day_attribut_11
+    name: 11:00 - 11:59
+  - entity: sensor.ote_energy_czk_next_day_attribut_12
+    name: 12:00 - 12:59
+  - entity: sensor.ote_energy_czk_next_day_attribut_13
+    name: 13:00 - 13:59
+  - entity: sensor.ote_energy_czk_next_day_attribut_14
+    name: 14:00 - 14:59
+  - entity: sensor.ote_energy_czk_next_day_attribut_15
+    name: 15:00 - 15:59
+  - entity: sensor.ote_energy_czk_next_day_attribut_16
+    name: 16:00 - 16:59
+  - entity: sensor.ote_energy_czk_next_day_attribut_17
+    name: 17:00 - 17:59
+  - entity: sensor.ote_energy_czk_next_day_attribut_18
+    name: 18:00 - 18:59
+  - entity: sensor.ote_energy_czk_next_day_attribut_19
+    name: 19:00 - 19:59
+  - entity: sensor.ote_energy_czk_next_day_attribut_20
+    name: 20:00 - 20:59
+  - entity: sensor.ote_energy_czk_next_day_attribut_21
+    name: 21:00 - 21:59
+  - entity: sensor.ote_energy_czk_next_day_attribut_22
+    name: 22:00 - 22:59
+  - entity: sensor.ote_energy_czk_next_day_attribut_23
     name: 23:00 - 23:59
 ```
