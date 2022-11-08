@@ -1,5 +1,5 @@
 import logging
-from . import ActualData
+from . import GlobalData
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 
@@ -42,16 +42,16 @@ class OTERateSensor_HighestPrice_Active(BinarySensorEntity):
 
     def update(self):
 
-        if (ActualData.OTEDataFiltredHP == None or len(ActualData.OTEDataFiltredHP) <= 0): return
+        if (GlobalData.OTEDataFiltredHP == None or len(GlobalData.OTEDataFiltredHP) <= 0): return
 
         try:
-            if len(ActualData.OTEDataFiltredHP) < 1:
+            if len(GlobalData.OTEDataFiltredHP) < 1:
                 self._available = False
                 return
 
-            MaxPrice = max(ActualData.OTEDataFiltredHP)
+            MaxPrice = max(GlobalData.OTEDataFiltredHP)
 
-            if abs(MaxPrice - ActualData.ActualPrice) < 0.000001:
+            if abs(MaxPrice - GlobalData.ActualPrice) < 0.000001:
                 self._active = True
             else:
                 self._active = False  
@@ -91,16 +91,16 @@ class OTERateSensor_LowestPrice_Active(BinarySensorEntity):
 
     def update(self):
 
-        if (ActualData.OTEDataFiltredLP == None or len(ActualData.OTEDataFiltredLP) <= 0): return
+        if (GlobalData.OTEDataFiltredLP == None or len(GlobalData.OTEDataFiltredLP) <= 0): return
 
         try:
-            if len(ActualData.OTEDataFiltredLP) < 1:
+            if len(GlobalData.OTEDataFiltredLP) < 1:
                 self._available = False
                 return
 
-            MinPrice = min(ActualData.OTEDataFiltredLP)
+            MinPrice = min(GlobalData.OTEDataFiltredLP)
 
-            if abs(MinPrice - ActualData.ActualPrice) < 0.000001:
+            if abs(MinPrice - GlobalData.ActualPrice) < 0.000001:
                 self._active = True
             else:
                 self._active = False
