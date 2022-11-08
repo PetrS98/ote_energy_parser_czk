@@ -11,6 +11,7 @@ from . import GlobalData
 
 """ Constants """
 DEVICE_CLASS = "monetary"
+STATE_CLASS = "measurement"
 
 CONF_COURSE_CODE = "course_code"
 CONF_MEASURE_UNIT = "measure_unit"
@@ -124,6 +125,11 @@ class OTERateSensor_Actual(SensorEntity):
     def device_class(self):
         """Return the device class of the sensor."""
         return DEVICE_CLASS
+        
+    @property
+    def state_class (self):
+        """Return True if entity is available."""
+        return STATE_CLASS
 
     @property
     def extra_state_attributes(self):
@@ -219,6 +225,11 @@ class OTERateSensor_Attribut_Actual(SensorEntity):
         return DEVICE_CLASS
 
     @property
+    def state_class (self):
+        """Return True if entity is available."""
+        return STATE_CLASS
+
+    @property
     def available(self):
         """Return True if entity is available."""
         
@@ -277,6 +288,11 @@ class OTERateSensor_HighestPrice(SensorEntity):
     def device_class(self):
         """Return the device class of the sensor."""
         return DEVICE_CLASS
+
+    @property
+    def state_class (self):
+        """Return True if entity is available."""
+        return STATE_CLASS
 
     @property
     def available(self):
@@ -343,6 +359,11 @@ class OTERateSensor_LowestPrice(SensorEntity):
     def device_class(self):
         """Return the device class of the sensor."""
         return DEVICE_CLASS
+        
+    @property
+    def state_class (self):
+        """Return True if entity is available."""
+        return STATE_CLASS
 
     @property
     def available(self):
@@ -402,6 +423,11 @@ class OTERateSensor_HighestPriceHour(SensorEntity):
     def device_class(self):
         """Return the device class of the sensor."""
         return DEVICE_CLASS
+        
+    @property
+    def state_class (self):
+        """Return True if entity is available."""
+        return STATE_CLASS
 
     @property
     def available(self):
@@ -458,6 +484,11 @@ class OTERateSensor_LowestPriceHour(SensorEntity):
     def device_class(self):
         """Return the device class of the sensor."""
         return DEVICE_CLASS
+        
+    @property
+    def state_class (self):
+        """Return True if entity is available."""
+        return STATE_CLASS
 
     @property
     def available(self):
@@ -523,6 +554,11 @@ class OTERateSensor_Attribut_Next_Day(SensorEntity):
     def device_class(self):
         """Return the device class of the sensor."""
         return DEVICE_CLASS
+        
+    @property
+    def state_class (self):
+        """Return True if entity is available."""
+        return STATE_CLASS
 
     @property
     def available(self):
