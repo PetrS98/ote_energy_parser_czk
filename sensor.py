@@ -423,11 +423,6 @@ class OTERateSensor_HighestPriceHour(SensorEntity):
     def device_class(self):
         """Return the device class of the sensor."""
         return DEVICE_CLASS
-        
-    @property
-    def state_class (self):
-        """Return True if entity is available."""
-        return STATE_CLASS
 
     @property
     def available(self):
@@ -484,11 +479,6 @@ class OTERateSensor_LowestPriceHour(SensorEntity):
     def device_class(self):
         """Return the device class of the sensor."""
         return DEVICE_CLASS
-        
-    @property
-    def state_class (self):
-        """Return True if entity is available."""
-        return STATE_CLASS
 
     @property
     def available(self):
