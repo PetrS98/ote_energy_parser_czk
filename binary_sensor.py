@@ -64,14 +64,14 @@ def GetOteData(courseCode, HPFromHour, HPToHour,  LPFromHour, LPToHour):
         OTEDataFiltredHP = []
 
         for i in range(len(GD.OteData)):
-            if i >= self._highestPriceFromHour and i <= self._highestPriceToHour:
+            if i >= HPFromHour and i <= HPToHour:
                 OTEDataFiltredHP.append(GD.OteData[i])
 
         GD.OTEDataFiltredHP = OTEDataFiltredHP
         OTEDataFiltredLP = []
 
         for i in range(len(GD.OteData)):
-            if i >= self._lowestPriceFromHour and i <= self._lowestPriceToHour:
+            if i >= LPFromHour and i <= LPToHour:
                 OTEDataFiltredLP.append(GD.OteData[i])
 
         GD.OTEDataFiltredLP = OTEDataFiltredLP
