@@ -61,20 +61,20 @@ def GetOteData(courseCode, HPFromHour, HPToHour,  LPFromHour, LPToHour):
         _LOGGER.exception("Error occured while retrieving data from ote-cr.cz.")
 
     try:
-        OTEDataFiltred = []
+        OTEDataFiltredHP = []
 
         for i in range(len(GD.OteData)):
-            if i >= HPFromHour and i <= HPToHour:
-                OTEDataFiltred.append(GD.OteData[i])
+            if i >= self._highestPriceFromHour and i <= self._highestPriceToHour:
+                OTEDataFiltredHP.append(GD.OteData[i])
 
-        GD.OTEDataFiltredHP = OTEDataFiltred
-        OTEDataFiltred.clear()
+        GD.OTEDataFiltredHP = OTEDataFiltredHP
+        OTEDataFiltredLP = []
 
         for i in range(len(GD.OteData)):
-            if i >= LPFromHour and i <= LPToHour:
-                OTEDataFiltred.append(GD.OteData[i])
+            if i >= self._lowestPriceFromHour and i <= self._lowestPriceToHour:
+                OTEDataFiltredLP.append(GD.OteData[i])
 
-        GD.OTEDataFiltredLP = OTEDataFiltred
+        GD.OTEDataFiltredLP = OTEDataFiltredLP
     except:
         _LOGGER.exception("Error occured while filtering data.")
 
