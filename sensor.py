@@ -161,8 +161,8 @@ class OTERateSensor_Actual(SensorEntity):
             GlobalData.ActualPrice = self._value
 
             if self._addAttributesToActualPrice:
-                for x in range(len(self.OTEData)):
-                    self._valueDict[format(f"{x:02d}") + ":00 - " + format(f"{x:02d}") + ":59"] = self.OTEData[x]
+                for x in range(len(GlobalData.OteData)):
+                    self._valueDict[format(f"{x:02d}") + ":00 - " + format(f"{x:02d}") + ":59"] = GlobalData.OteData[x]
 
             self._available = True
         except:
@@ -172,9 +172,9 @@ class OTERateSensor_Actual(SensorEntity):
         try:
             OTEDataFiltred = []
 
-            for i in range(len(self.OTEData)):
+            for i in range(len(GlobalData.OteData)):
                 if i >= self._highestPriceFromHour and i <= self._highestPriceToHour:
-                    OTEDataFiltred.append(self.OTEData[i])
+                    OTEDataFiltred.append(GlobalData.OteData[i])
 
             GlobalData.OTEDataFiltredHP = OTEDataFiltred
             OTEDataFiltred.clear()
