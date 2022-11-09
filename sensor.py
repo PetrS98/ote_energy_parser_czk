@@ -170,20 +170,20 @@ class OTERateSensor_Actual(SensorEntity):
             self._available = False  
 
         try:
-            OTEDataFiltred = []
+            OTEDataFiltredHP = []
 
             for i in range(len(GlobalData.OteData)):
                 if i >= self._highestPriceFromHour and i <= self._highestPriceToHour:
-                    OTEDataFiltred.append(GlobalData.OteData[i])
+                    OTEDataFiltredHP.append(GlobalData.OteData[i])
 
-            GlobalData.OTEDataFiltredHP = OTEDataFiltred
-            OTEDataFiltred.clear()
+            GlobalData.OTEDataFiltredHP = OTEDataFiltredHP
+            OTEDataFiltredLP = []
 
             for i in range(len(GlobalData.OteData)):
                 if i >= self._lowestPriceFromHour and i <= self._lowestPriceToHour:
-                    OTEDataFiltred.append(GlobalData.OteData[i])
+                    OTEDataFiltredLP.append(GlobalData.OteData[i])
 
-            GlobalData.OTEDataFiltredLP = OTEDataFiltred
+            GlobalData.OTEDataFiltredLP = OTEDataFiltredLP
         except:
             _LOGGER.exception("Error occured while filtering data.")
 
