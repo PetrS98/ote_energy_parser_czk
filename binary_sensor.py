@@ -174,3 +174,4 @@ class OTERateSensor_LowestPrice_Active(BinarySensorEntity):
         except:
             _LOGGER.exception("Error occured while retrieving data from ote-cr.cz or recalculating data.")
             self._available = False
+            
