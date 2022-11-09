@@ -591,4 +591,3 @@ class OTERateSensor_Attribut_Next_Day(SensorEntity):
             self._value = round(GD.NextDayOteData[self.AttIndex], self._decimalPlaces)
         except:
             _LOGGER.exception("Error in attribute sensors")
-            
