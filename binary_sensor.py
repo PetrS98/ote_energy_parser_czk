@@ -1,11 +1,19 @@
 import logging
 from . import OteLib
-from . import GlobalData
 
 import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import BinarySensorEntity
+
+class GlobalData():
+    # Actual Data From OTE Website
+    OteData = []
+    OTEDataFiltredHP = []
+    OTEDataFiltredLP = []
+    ActualPrice = 0.0
+
+GD = GlobalData()
 
 #region Constant
 
@@ -47,26 +55,26 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 def GetOteData(courseCode, HPFromHour, HPToHour,  LPFromHour, LPToHour):
 
     try:
-        GlobalData.OteData = OteLib.RecalculateActualOTEData(courseCode, True)
-        GlobalData.ActualPrice = OteLib.GetActualEnergyPrice(GlobalData.OteData)
+        GD.OteData = OteLib.RecalculateActualOTEData(courseCode, True)
+        GD.ActualPrice = OteLib.GetActualEnergyPrice(GD.OteData)
     except:
         _LOGGER.exception("Error occured while retrieving data from ote-cr.cz.")
 
     try:
         OTEDataFiltred = []
 
-        for i in range(len(GlobalData.OteData)):
+        for i in range(len(GD.OteData)):
             if i >= HPFromHour and i <= HPToHour:
-                OTEDataFiltred.append(GlobalData.OteData[i])
+                OTEDataFiltred.append(GD.OteData[i])
 
-        GlobalData.OTEDataFiltredHP = OTEDataFiltred
+        GD.OTEDataFiltredHP = OTEDataFiltred
         OTEDataFiltred.clear()
 
-        for i in range(len(GlobalData.OteData)):
+        for i in range(len(GD.OteData)):
             if i >= LPFromHour and i <= LPToHour:
-                OTEDataFiltred.append(GlobalData.OteData[i])
+                OTEDataFiltred.append(GD.OteData[i])
 
-        GlobalData.OTEDataFiltredLP = OTEDataFiltred
+        GD.OTEDataFiltredLP = OTEDataFiltred
     except:
         _LOGGER.exception("Error occured while filtering data.")
 
@@ -106,18 +114,18 @@ class OTERateSensor_HighestPrice_Active(BinarySensorEntity):
 
         GetOteData(self._courseCode, self._highestPriceFromHour, self._highestPriceToHour, self._lowestPriceFromHour, self._lowestPriceToHour)
 
-        if (GlobalData.OTEDataFiltredHP == None or len(GlobalData.OTEDataFiltredHP) <= 0): 
+        if (GD.OTEDataFiltredHP == None or len(GD.OTEDataFiltredHP) <= 0): 
             self._available = False
             return
 
         try:
-            if len(GlobalData.OTEDataFiltredHP) < 1:
+            if len(GD.OTEDataFiltredHP) < 1:
                 self._available = False
                 return
 
-            MaxPrice = max(GlobalData.OTEDataFiltredHP)
+            MaxPrice = max(GD.OTEDataFiltredHP)
 
-            if abs(MaxPrice - GlobalData.ActualPrice) < 0.000001:
+            if abs(MaxPrice - GD.ActualPrice) < 0.000001:
                 self._active = True
             else:
                 self._active = False  
@@ -155,18 +163,18 @@ class OTERateSensor_LowestPrice_Active(BinarySensorEntity):
 
     def update(self):
 
-        if (GlobalData.OTEDataFiltredLP == None or len(GlobalData.OTEDataFiltredLP) <= 0): 
+        if (GD.OTEDataFiltredLP == None or len(GD.OTEDataFiltredLP) <= 0): 
             self._available = False
             return
 
         try:
-            if len(GlobalData.OTEDataFiltredLP) < 1:
+            if len(GD.OTEDataFiltredLP) < 1:
                 self._available = False
                 return
 
-            MinPrice = min(GlobalData.OTEDataFiltredLP)
+            MinPrice = min(GD.OTEDataFiltredLP)
 
-            if abs(MinPrice - GlobalData.ActualPrice) < 0.000001:
+            if abs(MinPrice - GD.ActualPrice) < 0.000001:
                 self._active = True
             else:
                 self._active = False

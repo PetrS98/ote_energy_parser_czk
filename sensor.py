@@ -7,7 +7,18 @@ from homeassistant.components.sensor import SensorEntity
 """ External Imports """
 import logging
 from . import OteLib
-from . import GlobalData
+
+class GlobalData():
+    # Actual Data From OTE Website
+    OteData = []
+    OTEDataFiltredHP = []
+    OTEDataFiltredLP = []
+    ActualPrice = 0.0
+
+    # Next Day Data From OTE Website
+    NextDayOteData = []
+
+GD = GlobalData()
 
 #region Constant
 
@@ -157,12 +168,12 @@ class OTERateSensor_Actual(SensorEntity):
             self.OTEData = OteLib.RecalculateActualOTEData(self._courseCode, self._measureUnit)
             self._value = round(OteLib.GetActualEnergyPrice(self.OTEData), self._decimalPlaces)
 
-            GlobalData.OteData = self.OTEData
-            GlobalData.ActualPrice = self._value
+            GD.OteData = self.OTEData
+            GD.ActualPrice = self._value
 
             if self._addAttributesToActualPrice:
-                for x in range(len(GlobalData.OteData)):
-                    self._valueDict[format(f"{x:02d}") + ":00 - " + format(f"{x:02d}") + ":59"] = GlobalData.OteData[x]
+                for x in range(len(GD.OteData)):
+                    self._valueDict[format(f"{x:02d}") + ":00 - " + format(f"{x:02d}") + ":59"] = GD.OteData[x]
 
             self._available = True
         except:
@@ -172,24 +183,24 @@ class OTERateSensor_Actual(SensorEntity):
         try:
             OTEDataFiltredHP = []
 
-            for i in range(len(GlobalData.OteData)):
+            for i in range(len(GD.OteData)):
                 if i >= self._highestPriceFromHour and i <= self._highestPriceToHour:
-                    OTEDataFiltredHP.append(GlobalData.OteData[i])
+                    OTEDataFiltredHP.append(GD.OteData[i])
 
-            GlobalData.OTEDataFiltredHP = OTEDataFiltredHP
+            GD.OTEDataFiltredHP = OTEDataFiltredHP
             OTEDataFiltredLP = []
 
-            for i in range(len(GlobalData.OteData)):
+            for i in range(len(GD.OteData)):
                 if i >= self._lowestPriceFromHour and i <= self._lowestPriceToHour:
-                    OTEDataFiltredLP.append(GlobalData.OteData[i])
+                    OTEDataFiltredLP.append(GD.OteData[i])
 
-            GlobalData.OTEDataFiltredLP = OTEDataFiltredLP
+            GD.OTEDataFiltredLP = OTEDataFiltredLP
         except:
             _LOGGER.exception("Error occured while filtering data.")
 
         try:
             if (self._addAttributeSensorsNextDay):
-                GlobalData.NextDayOteData = OteLib.RecalculateNextDayOTEData(self._courseCode, self._measureUnit)
+                GD.NextDayOteData = OteLib.RecalculateNextDayOTEData(self._courseCode, self._measureUnit)
         except:
             _LOGGER.exception("Error occured while retrieving next day data from ote-cr.cz.")
 
@@ -247,16 +258,16 @@ class OTERateSensor_Attribut_Actual(SensorEntity):
         This is the only method that should fetch new data for Home Assistant.
         """
 
-        if (GlobalData.OteData == None or len(GlobalData.OteData) <= 0): return
+        if (GD.OteData == None or len(GD.OteData) <= 0): return
 
         try:
 
-            if len(GlobalData.OteData) >= self.AttIndex + 1:
+            if len(GD.OteData) >= self.AttIndex + 1:
                 self._available = True
             else:
                 self._available = False
 
-            self._value = round(GlobalData.OteData[self.AttIndex], self._decimalPlaces)
+            self._value = round(GD.OteData[self.AttIndex], self._decimalPlaces)
         except:
             _LOGGER.exception("Error in attribute sensors")
     
@@ -313,23 +324,23 @@ class OTERateSensor_HighestPrice(SensorEntity):
         This is the only method that should fetch new data for Home Assistant.
         """
 
-        if (GlobalData.OteData == None or len(GlobalData.OteData) <= 0): return
-        if (GlobalData.OTEDataFiltredHP == None or len(GlobalData.OTEDataFiltredHP) <= 0): return
+        if (GD.OteData == None or len(GD.OteData) <= 0): return
+        if (GD.OTEDataFiltredHP == None or len(GD.OTEDataFiltredHP) <= 0): return
 
         self.val = round(self.GetHighestPrice(), self._decimalPlaces) 
 
     def GetHighestPrice(self):
         
-        if len(GlobalData.OteData) < 1:
+        if len(GD.OteData) < 1:
             self.avail = False
             return 0.0
 
-        if len(GlobalData.OTEDataFiltredHP) < 1:
+        if len(GD.OTEDataFiltredHP) < 1:
             self.avail = False
             return 0.0
 
         self.avail = True
-        return max(GlobalData.OTEDataFiltredHP)
+        return max(GD.OTEDataFiltredHP)
         
 class OTERateSensor_LowestPrice(SensorEntity):
     """Representation of a Sensor."""
@@ -384,23 +395,23 @@ class OTERateSensor_LowestPrice(SensorEntity):
         This is the only method that should fetch new data for Home Assistant.
         """
 
-        if (GlobalData.OteData == None or len(GlobalData.OteData) <= 0): return
-        if (GlobalData.OTEDataFiltredLP == None or len(GlobalData.OTEDataFiltredLP) <= 0): return
+        if (GD.OteData == None or len(GD.OteData) <= 0): return
+        if (GD.OTEDataFiltredLP == None or len(GD.OTEDataFiltredLP) <= 0): return
 
         self.val = round(self.GetLowestPrice(), self._decimalPlaces) 
 
     def GetLowestPrice(self):
         
-        if len(GlobalData.OteData) < 1:
+        if len(GD.OteData) < 1:
             self.avail = False
             return 0.0
 
-        if len(GlobalData.OTEDataFiltredLP) < 1:
+        if len(GD.OTEDataFiltredLP) < 1:
             self.avail = False
             return 0.0
 
         self.avail = True
-        return min(GlobalData.OTEDataFiltredLP)
+        return min(GD.OTEDataFiltredLP)
 
 class OTERateSensor_HighestPriceHour(SensorEntity):
     """Representation of a Sensor."""
@@ -443,16 +454,16 @@ class OTERateSensor_HighestPriceHour(SensorEntity):
         This is the only method that should fetch new data for Home Assistant.
         """
 
-        if (GlobalData.OteData == None or len(GlobalData.OteData) <= 0): return
-        if (GlobalData.OTEDataFiltredHP == None or len(GlobalData.OTEDataFiltredHP) <= 0): return
+        if (GD.OteData == None or len(GD.OteData) <= 0): return
+        if (GD.OTEDataFiltredHP == None or len(GD.OTEDataFiltredHP) <= 0): return
 
         try:
-            if len(GlobalData.OTEDataFiltredHP) < 1:
+            if len(GD.OTEDataFiltredHP) < 1:
                 self.avail = False
                 return 0.0
 
-            MaxPrice = max(GlobalData.OTEDataFiltredHP)
-            DataIndex = GlobalData.OteData.index(MaxPrice)
+            MaxPrice = max(GD.OTEDataFiltredHP)
+            DataIndex = GD.OteData.index(MaxPrice)
             self.val = format(f"{DataIndex:02d}") + ":00 - " + format(f"{DataIndex:02d}") + ":59"
             self.avail = True
         except:
@@ -499,16 +510,16 @@ class OTERateSensor_LowestPriceHour(SensorEntity):
         This is the only method that should fetch new data for Home Assistant.
         """
 
-        if (GlobalData.OteData == None or len(GlobalData.OteData) <= 0): return
-        if (GlobalData.OTEDataFiltredLP == None or len(GlobalData.OTEDataFiltredLP) <= 0): return
+        if (GD.OteData == None or len(GD.OteData) <= 0): return
+        if (GD.OTEDataFiltredLP == None or len(GD.OTEDataFiltredLP) <= 0): return
 
         try:
-            if len(GlobalData.OTEDataFiltredLP) < 1:
+            if len(GD.OTEDataFiltredLP) < 1:
                 self.avail = False
                 return
 
-            MinPrice = min(GlobalData.OTEDataFiltredLP)
-            DataIndex = GlobalData.OteData.index(MinPrice)
+            MinPrice = min(GD.OTEDataFiltredLP)
+            DataIndex = GD.OteData.index(MinPrice)
             self.val = format(f"{DataIndex:02d}") + ":00 - " + format(f"{DataIndex:02d}") + ":59"
             self.avail = True
         except:
@@ -568,16 +579,16 @@ class OTERateSensor_Attribut_Next_Day(SensorEntity):
         This is the only method that should fetch new data for Home Assistant.
         """
 
-        if (GlobalData.NextDayOteData == None or len(GlobalData.NextDayOteData) <= 0): return
+        if (GD.NextDayOteData == None or len(GD.NextDayOteData) <= 0): return
 
         try:
 
-            if len(GlobalData.NextDayOteData) >= self.AttIndex + 1:
+            if len(GD.NextDayOteData) >= self.AttIndex + 1:
                 self._available = True
             else:
                 self._available = False
 
-            self._value = round(GlobalData.NextDayOteData[self.AttIndex], self._decimalPlaces)
+            self._value = round(GD.NextDayOteData[self.AttIndex], self._decimalPlaces)
         except:
             _LOGGER.exception("Error in attribute sensors")
             
