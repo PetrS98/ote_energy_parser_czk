@@ -95,6 +95,8 @@ def BuildClasses(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddA
     Classes.append(OTERateSensor_LowestPrice(DecimalPlaces, UnitOfMeasurement))
     Classes.append(OTERateSensor_HighestPriceHour())
     Classes.append(OTERateSensor_LowestPriceHour())
+    Classes.append(OTERateSensor_AveragePrice_Actual_Day(DecimalPlaces, UnitOfMeasurement))
+    Classes.append(OTERateSensor_AveragePrice_Next_Day(DecimalPlaces, UnitOfMeasurement))
     return Classes
 
 class OTERateSensor_Actual(SensorEntity):
@@ -591,3 +593,139 @@ class OTERateSensor_Attribut_Next_Day(SensorEntity):
             self._value = round(GD.NextDayOteData[self.AttIndex], self._decimalPlaces)
         except:
             _LOGGER.exception("Error in attribute sensors")
+
+class OTERateSensor_AveragePrice_Actual_Day(SensorEntity):
+    """Representation of a Sensor."""
+
+    def __init__(self, DecimalPlaces, UnitOfMeasurement):
+        """Initialize the sensor."""
+
+        self.val = None
+        self.avail = None
+        self._decimalPlaces = DecimalPlaces
+        self._unitOfMeasurement = UnitOfMeasurement
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        return "OTE Energy CZK - Price Average Actual Day - MAIN"
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return "OTE Energy CZK - Price Average Actual Day"
+
+    @property
+    def native_value(self):
+        """Return the native value of the sensor."""
+        return self.val
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the native unit of measurement."""
+        return self._unitOfMeasurement
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS
+
+    @property
+    def state_class (self):
+        """Return True if entity is available."""
+        return STATE_CLASS
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+
+        return self.avail
+
+    def update(self):
+        """Fetch new state data for the sensor.
+
+        This is the only method that should fetch new data for Home Assistant.
+        """
+
+        if (GD.OteData == None or len(GD.OteData) <= 0): return
+
+        try:
+            tmp_price = 0.0
+            tmp_otedata_len = len(GD.OteData)
+
+            for i in range(tmp_otedata_len):
+                tmp_price += GD.OteData[i]
+
+            self.val = round((tmp_price / tmp_otedata_len), self._decimalPlaces)
+            self.avail = True
+        except:
+            _LOGGER.exception("Error in actual day average calculation")
+            self.avail = False
+            
+class OTERateSensor_AveragePrice_Next_Day(SensorEntity):
+    """Representation of a Sensor."""
+
+    def __init__(self, DecimalPlaces, UnitOfMeasurement):
+        """Initialize the sensor."""
+
+        self.val = None
+        self.avail = None
+        self._decimalPlaces = DecimalPlaces
+        self._unitOfMeasurement = UnitOfMeasurement
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        return "OTE Energy CZK - Price Average Next Day - MAIN"
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return "OTE Energy CZK - Price Average Next Day"
+
+    @property
+    def native_value(self):
+        """Return the native value of the sensor."""
+        return self.val
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the native unit of measurement."""
+        return self._unitOfMeasurement
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS
+
+    @property
+    def state_class (self):
+        """Return True if entity is available."""
+        return STATE_CLASS
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+
+        return self.avail
+
+    def update(self):
+        """Fetch new state data for the sensor.
+
+        This is the only method that should fetch new data for Home Assistant.
+        """
+
+        if (GD.NextDayOteData == None or len(GD.NextDayOteData) <= 0): return
+
+        try:
+            tmp_price = 0.0
+            tmp_otedata_len = len(GD.NextDayOteData)
+
+            for i in range(tmp_otedata_len):
+                tmp_price += GD.NextDayOteData[i]
+
+            self.val = round((tmp_price / tmp_otedata_len), self._decimalPlaces)
+            self.avail = True
+        except:
+            _LOGGER.exception("Error in next day average calculation")
+            self.avail = False
