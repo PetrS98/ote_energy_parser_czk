@@ -72,6 +72,8 @@ entities:
 type: entities
 title: OTE Energy CZK - Actual
 entities:
+  - entity: sensor.ote_energy_czk_price_average_actual_day
+    name: Price Average
   - entity: sensor.ote_energy_czk_actual_attribut_0
     name: 00:00 - 00:59
   - entity: sensor.ote_energy_czk_actual_attribut_1
@@ -128,6 +130,8 @@ entities:
 type: entities
 title: OTE Energy CZK - Next Day
 entities:
+  - entity: sensor.ote_energy_czk_price_average_next_day
+    name: Price Average
   - entity: sensor.ote_energy_czk_next_day_attribut_0
     name: 00:00 - 00:59
   - entity: sensor.ote_energy_czk_next_day_attribut_1
