@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 def GetOteData(courseCode, HPFromHour, HPToHour,  LPFromHour, LPToHour):
 
     try:
-        GD.OteData = OteLib.RecalculateActualOTEData(courseCode, True)
+        GD.OteData = OteLib.RecalculateOTEData(True, courseCode, True, 0.0)
         GD.ActualPrice = OteLib.GetActualEnergyPrice(GD.OteData)
     except:
         _LOGGER.exception("Error occured while retrieving data from ote-cr.cz.")

@@ -40,6 +40,7 @@ CONF_HIGHEST_PRICE_FROM_HOUR = "highest_price_from_hour"
 CONF_HIGHEST_PRICE_TO_HOUR = "highest_price_to_hour"
 CONF_LOWEST_PRICE_FROM_HOUR = "lowest_price_from_hour"
 CONF_LOWEST_PRICE_TO_HOUR = "lowest_price_to_hour"
+CONF_VAT = "vat"
 
 #endregion
 
@@ -57,7 +58,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_HIGHEST_PRICE_FROM_HOUR): cv.positive_int,
         vol.Required(CONF_HIGHEST_PRICE_TO_HOUR): cv.positive_int,
         vol.Required(CONF_LOWEST_PRICE_FROM_HOUR): cv.positive_int,
-        vol.Required(CONF_LOWEST_PRICE_TO_HOUR): cv.positive_int
+        vol.Required(CONF_LOWEST_PRICE_TO_HOUR): cv.positive_int,
+        vol.Required(CONF_VAT) : cv.positive_float
     }
 )
 
@@ -74,14 +76,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     HighestPriceToHour = config.get(CONF_HIGHEST_PRICE_TO_HOUR)
     LowestPriceFromHour = config.get(CONF_LOWEST_PRICE_FROM_HOUR)
     LowestPriceToHour = config.get(CONF_LOWEST_PRICE_TO_HOUR)
+    vat = config.get(CONF_VAT)
 
     add_entities(BuildClasses(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddAttributeSensorsActual, AddAttributesToActualPrice,
-                              HighestPriceFromHour, HighestPriceToHour, LowestPriceFromHour, LowestPriceToHour, AddAttributeSensorsNextDay), update_before_add=True)
+                              HighestPriceFromHour, HighestPriceToHour, LowestPriceFromHour, LowestPriceToHour, AddAttributeSensorsNextDay, vat), update_before_add=True)
 
-def BuildClasses(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddAttributeSensorsActual, AddAttributesToActualPrice, HighestPriceFromHour, HighestPriceToHour, LowestPriceFromHour, LowestPriceToHour, AddAttributeSensorsNextDay):
+def BuildClasses(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddAttributeSensorsActual, AddAttributesToActualPrice, HighestPriceFromHour, HighestPriceToHour, LowestPriceFromHour, LowestPriceToHour, AddAttributeSensorsNextDay, vat):
     Classes = []
 
-    Classes.append(OTERateSensor_Actual(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddAttributesToActualPrice, HighestPriceFromHour, HighestPriceToHour, LowestPriceFromHour, LowestPriceToHour, AddAttributeSensorsNextDay))
+    Classes.append(OTERateSensor_Actual(CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddAttributesToActualPrice, HighestPriceFromHour, HighestPriceToHour, LowestPriceFromHour, LowestPriceToHour, AddAttributeSensorsNextDay, vat))
 
     if AddAttributeSensorsActual:
         for x in range(24):
@@ -103,7 +106,7 @@ class OTERateSensor_Actual(SensorEntity):
 
     """Representation of a Sensor."""
 
-    def __init__(self, CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddAttributesToActualPrice, HighestPriceFromHour, HighestPriceToHour, LowestPriceFromHour, LowestPriceToHour, AddAttributeSensorsNextDay):
+    def __init__(self, CourseCode, MeasureUnit, DecimalPlaces, UnitOfMeasurement, AddAttributesToActualPrice, HighestPriceFromHour, HighestPriceToHour, LowestPriceFromHour, LowestPriceToHour, AddAttributeSensorsNextDay, vat):
         """Initialize the sensor."""
 
         self._value = None
@@ -119,6 +122,7 @@ class OTERateSensor_Actual(SensorEntity):
         self._lowestPriceFromHour = LowestPriceFromHour
         self._lowestPriceToHour = LowestPriceToHour
         self._addAttributeSensorsNextDay = AddAttributeSensorsNextDay
+        self._vat = vat
         self._valueDict = dict()
 
     @property
@@ -167,7 +171,7 @@ class OTERateSensor_Actual(SensorEntity):
         This is the only method that should fetch new data for Home Assistant.
         """
         try:
-            self.OTEData = OteLib.RecalculateActualOTEData(self._courseCode, self._measureUnit)
+            self.OTEData = OteLib.RecalculateOTEData(True, self._courseCode, self._measureUnit, self._vat)
             self._value = round(OteLib.GetActualEnergyPrice(self.OTEData), self._decimalPlaces)
 
             GD.OteData = self.OTEData
@@ -202,7 +206,7 @@ class OTERateSensor_Actual(SensorEntity):
 
         try:
             if (self._addAttributeSensorsNextDay):
-                GD.NextDayOteData = OteLib.RecalculateNextDayOTEData(self._courseCode, self._measureUnit)
+                GD.NextDayOteData = OteLib.RecalculateOTEData(False, self._courseCode, self._measureUnit, self._vat)
         except:
             _LOGGER.exception("Error occured while retrieving next day data from ote-cr.cz.")
 

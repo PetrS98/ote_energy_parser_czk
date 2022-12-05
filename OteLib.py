@@ -1,25 +1,18 @@
 import datetime
 import requests
 
-def GetActualDataFromOTE():
+def GetDataFromOTE(ActualPrice):
     """Return data from ote-cr in [EUR/MWh]"""
 
     date = datetime.datetime.now()
     params = dict (date = date.strftime('%Y-%m-%d'))
 
     data = []
-    response = requests.get(url="https://www.ote-cr.cz/cs/kratkodobe-trhy/elektrina/denni-trh/@@chart-data", params=params).json()
 
-    for i in range(len(response['data']['dataLine'][1]['point'])):
-        data.append(float(response['data']['dataLine'][1]['point'][i]['y']))
-
-    return data
-
-def GetNextDayDataFromOTE():
-    """Return data from ote-cr in [EUR/MWh]"""
-
-    data = []
-    response = requests.get(url="https://www.ote-cr.cz/cs/kratkodobe-trhy/elektrina/denni-trh/@@chart-data").json()
+    if ActualPrice:
+        response = requests.get(url="https://www.ote-cr.cz/cs/kratkodobe-trhy/elektrina/denni-trh/@@chart-data", params=params).json()
+    else:
+        response = requests.get(url="https://www.ote-cr.cz/cs/kratkodobe-trhy/elektrina/denni-trh/@@chart-data").json()
 
     for i in range(len(response['data']['dataLine'][1]['point'])):
         data.append(float(response['data']['dataLine'][1]['point'][i]['y']))
@@ -49,12 +42,12 @@ def GetActualEnergyPrice(OTEData):
 
     return OTEData[DateTime.hour]
 
-def RecalculateActualOTEData(CourseCode, Unit):
+def RecalculateOTEData(ActualPrice, CourseCode, Unit, vat):
     ReqCourse = []
     RecalculateData = []
 
     CZKCourses = GetCZKCourses()
-    OTEDayDataEUR = GetActualDataFromOTE()
+    OTEDayDataEUR = GetDataFromOTE(ActualPrice)
 
     for course in CZKCourses:
         if CourseCode == course[3]:
@@ -62,31 +55,13 @@ def RecalculateActualOTEData(CourseCode, Unit):
             break
 
     for HourData in OTEDayDataEUR:
+        HourDataWithCourses = HourData * (float(ReqCourse[4].replace(",", ".")) / float(ReqCourse[2].replace(",", ".")))
+        VatFromHourData = vat * (HourDataWithCourses/100.0)
+
         if Unit:
-            RecalculateData.append((HourData * (float(ReqCourse[4].replace(",", ".")) / float(ReqCourse[2].replace(",", ".")))) / 1000.0)
+            RecalculateData.append((HourDataWithCourses + VatFromHourData) / 1000.0)
             continue
 
-        RecalculateData.append(HourData * (float(ReqCourse[4].replace(",", ".")) / float(ReqCourse[2].replace(",", "."))))
-
-    return RecalculateData
-
-def RecalculateNextDayOTEData(CourseCode, Unit):
-    ReqCourse = []
-    RecalculateData = []
-
-    CZKCourses = GetCZKCourses()
-    OTEDayDataEUR = GetNextDayDataFromOTE()
-
-    for course in CZKCourses:
-        if CourseCode == course[3]:
-            ReqCourse = course
-            break
-
-    for HourData in OTEDayDataEUR:
-        if Unit:
-            RecalculateData.append((HourData * (float(ReqCourse[4].replace(",", ".")) / float(ReqCourse[2].replace(",", ".")))) / 1000.0)
-            continue
-
-        RecalculateData.append(HourData * (float(ReqCourse[4].replace(",", ".")) / float(ReqCourse[2].replace(",", "."))))
+        RecalculateData.append(HourDataWithCourses + VatFromHourData)
 
     return RecalculateData
