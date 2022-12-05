@@ -24,6 +24,7 @@ sensor:
     highest_price_to_hour: 6                # Filter for highest price (TO)
     lowest_price_from_hour: 0               # Filter for lowest price (FROM)
     lowest_price_to_hour: 6                 # Filter for lowest price (TO) 
+    vat: 21.0                               # VAT in percent [%]
 
 binary_sensor:
   - platform: ote_energy_parser_czk         # Name of the addons folder
